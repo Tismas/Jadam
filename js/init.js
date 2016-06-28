@@ -33,6 +33,10 @@
 		this.dmg = units.knight.dmg;
 		this.speed = units.knight.speed;
 		this.color = units.knight.color;
+		this.frame = 0;
+		this.frameTime = 10;
+		this.frameCnt = 0;
+		this.frames = 3;
 
 		this.die = function() {
 			var index = playerUnits.indexOf(this);
@@ -44,12 +48,27 @@
 			}
 		}
 		this.draw = function() {
-			ctx.fillStyle = this.color;
-			ctx.fillRect(this.x-offset + tileSize/4,this.y + tileSize/4,tileSize/2,tileSize/2);
+			if(enemyUnits.indexOf(this) != -1){
+				ctx.save();
+				ctx.translate(this.x,this.y);
+				ctx.scale(-1,1);
+				ctx.translate(this.x,-this.y)
+				ctx.drawImage(stevo[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
+				ctx.restore();
+			}
+			else{
+				ctx.drawImage(stevo[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
+			}
 		}
 		this.update = function() {
 			if(this.hp<=0 || this.x >= widthT*tileSize)
 				this.die();
+			this.frameCnt++;
+			if(this.frameCnt>=this.frameTime){
+				this.frame++;
+				this.frameCnt=0;
+				if(this.frame==this.frames) this.frame = 0;
+			}
 		}
 	}
 	var Archer = function(x,y) {
@@ -133,7 +152,6 @@
 	var canvas 		= 	document.createElement('canvas');
 	var ctx 		= 	canvas.getContext('2d');
 	var imageCount	=	0;
-	var totalImages =	1;
 	var heightT 	= 	7;	// rows+1
 	var widthT		=	30;
 	var width 		= 	window.innerWidth;
@@ -161,6 +179,13 @@
 	var bg = new Image();
 	bg.onload = imageLoadCallback;
 	bg.src = "assets/background.png";
+	var stevo = [];
+	for(var i=0;i<3;i++){
+		stevo.push(new Image());
+		stevo[i].onload = imageLoadCallback;
+		stevo[i].src = "assets/" + (i+1) + ".png";
+	}
+	var totalImages = 4;
 
 	var imageLoadCallback = function() {
 		imageCount++;
