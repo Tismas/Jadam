@@ -14,7 +14,7 @@
 			"dmg": 4,
 			"speed": 5,
 			"price": 20,
-			"color": "#0f0",
+			"color": "#0f0"
 		},
 		"archer": {
 			"hp": 8,
@@ -33,6 +33,8 @@
 		this.dmg = units.knight.dmg;
 		this.speed = units.knight.speed;
 		this.color = units.knight.color;
+
+		this.image = units.knight.image;
 		this.frame = 0;
 		this.frameTime = 10;
 		this.frameCnt = 0;
@@ -53,11 +55,11 @@
 				ctx.translate(this.x,this.y);
 				ctx.scale(-1,1);
 				ctx.translate(this.x,-this.y)
-				ctx.drawImage(stevo[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
+				ctx.drawImage(this.image[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
 				ctx.restore();
 			}
 			else{
-				ctx.drawImage(stevo[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
+				ctx.drawImage(this.image[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
 			}
 		}
 		this.update = function() {
@@ -133,9 +135,8 @@
 			else
 				ctx.fillStyle = this.background;
 			ctx.fillRect(this.x,this.y,tileSize,tileSize);
-			ctx.fillStyle = this.color;
-			ctx.fillRect(this.x + tileSize/5, this.y + tileSize/5, tileSize- 2*tileSize/5, tileSize - 2*tileSize/5);
-			ctx.font = "20px Arial"
+			ctx.drawImage(unitDesc.image[0], this.x + tileSize/5, this.y + tileSize/5, tileSize- 2*tileSize/5, tileSize - 2*tileSize/5);
+			ctx.font = "20px Arial";
 			var price = "$" + this.cost;
 			ctx.fillText(price, this.x + tileSize - tileSize/2-ctx.measureText(price).width/2, this.y + tileSize-10);
 			if(this.statusCounter > 0){
@@ -185,6 +186,7 @@
 		stevo[i].onload = imageLoadCallback;
 		stevo[i].src = "assets/" + (i+1) + ".png";
 	}
+	units.knight.image = stevo;
 	var totalImages = 4;
 
 	var imageLoadCallback = function() {
@@ -195,8 +197,9 @@
 	var init = function() {
 		game.appendChild(canvas);
 		unitButtons.push(new UnitButton(tileSize*0,0,units.knight,Knight));
-		unitButtons.push(new UnitButton(tileSize*1,0,units.archer,Archer));
+		// unitButtons.push(new UnitButton(tileSize*1,0,units.archer,Archer));
 		enemyUnits.push(new Knight(2000,tileSize));
+		console.log(units.knight.image);
 	}
 
 	var loop = function () {
