@@ -2,7 +2,7 @@
 
 	// general functins
 	var collide = function(x1,y1,x2,y2) {
-		if(x2 <= x1 + tileSize && x2 >= x1 && y2 <= y1 + tileSize && y2 >= y1)
+		if(x2 < x1 + tileSize && x2 > x1 && y2 < y1 + tileSize && y2 >= y1)
 			return true;
 		return false;
 	}
@@ -14,7 +14,8 @@
 			"dmg": 4,
 			"speed": 5,
 			"price": 20,
-			"color": "#0f0"
+			"color": "#0f0",
+			"reward": 30,
 		},
 		"archer": {
 			"hp": 8,
@@ -22,6 +23,7 @@
 			"speed": 6,
 			"price": 50,
 			"color": "#f00",
+			"reward": 80,
 		},
 	}
 
@@ -33,6 +35,7 @@
 		this.maxhp = units.knight.hp;
 		this.dmg = units.knight.dmg;
 		this.speed = units.knight.speed;
+		this.reward = units.knight.reward;
 		this.attackCooldown = 20;
 		this.timeToAttack = 0;
 
@@ -57,6 +60,7 @@
 			else {
 				index = enemyUnits.indexOf(this);
 				enemyUnits.splice(index,1);
+				money += this.reward;
 			}
 		}
 		this.draw = function() {
@@ -67,13 +71,13 @@
 				ctx.scale(-1,1);
 				ctx.translate(this.x,-this.y)
 				ctx.drawImage(this.image[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
-				ctx.fillRect(-(this.x)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75),10);
+				ctx.fillRect(-(this.x-offset)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75),10);
 				ctx.restore();
 
 			}
 			else{
 				ctx.drawImage(this.image[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
-				ctx.fillRect(this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75),10);
+				ctx.fillRect(-offset + this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75),10);
 			}
 			ctx.fillStyle = "#0f0";
 		}
@@ -194,8 +198,7 @@
 		game.appendChild(canvas);
 		unitButtons.push(new UnitButton(tileSize*0,0,units.knight,Knight));
 		// unitButtons.push(new UnitButton(tileSize*1,0,units.archer,Archer));
-		enemyUnits.push(new Knight(1000,tileSize));
-		console.log(units.knight.image);
+		enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
 	}
 
 	var loop = function () {
@@ -277,6 +280,9 @@
 
 		var delta = now - before;
 		if(delta > interval){
+			var spawningEnemy = Math.floor(Math.random()*100);
+			if(spawningEnemy == 1)
+				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
 			scrollMap();
 			while(delta>interval){
 				movePlayers();
