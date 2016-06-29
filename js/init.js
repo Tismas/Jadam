@@ -50,6 +50,8 @@
 			if(this.timeToAttack == 0 && this.hp > 0) {
 				this.timeToAttack = this.attackCooldown;
 				target.hp -= this.dmg;
+				if(target.hp <= 0 && enemyUnits.indexOf(target) != -1)
+					money += target.reward;
 				// TODO odpalene animacji ataku
 			}
 		}
@@ -60,11 +62,14 @@
 			else {
 				index = enemyUnits.indexOf(this);
 				enemyUnits.splice(index,1);
-				money += this.reward;
 			}
 		}
 		this.draw = function() {
-			ctx.fillStyle = "#0f0";
+			var hpGradient = ctx.createLinearGradient(this.x-offset,this.y,this.x-offset,this.y+20);
+			hpGradient.addColorStop(0.01,"black");
+			hpGradient.addColorStop(0.5,"rgb(" + (this.maxhp-this.hp)/this.maxhp*255 + "," + this.hp/this.maxhp*255 + ",50)");
+			hpGradient.addColorStop(0.99,"black");
+			ctx.fillStyle = hpGradient;
 			if(enemyUnits.indexOf(this) != -1){
 				ctx.save();
 				ctx.translate(this.x,this.y);
@@ -86,7 +91,7 @@
 		this.update = function() {
 			if(this.timeToAttack != 0)
 				this.timeToAttack--;
-			if(this.hp<=0 || this.x >= widthT*tileSize)
+			if(this.hp<=0 || this.x >= widthT*tileSize || this.x < 0)
 				this.die();
 			if(!this.moving)
 				this.frame = 0;
@@ -192,8 +197,11 @@
 	var hpBorder = new Image();
 	hpBorder.onload = imageLoadCallback;
 	hpBorder.src = "assets/hp.png";
+	var coin = new Image();
+	coin.onload = imageLoadCallback;
+	coin.src = "assets/moneta1.png";
 
-	var totalImages = 5;
+	var totalImages = 6;
 
 	var imageLoadCallback = function() {
 		imageCount++;
@@ -250,12 +258,12 @@
 		}	
 	}
 	var moveEnemies = function() {
-		for(var i=0;i<enemyUnits.length;i++){
+		for(var i=0;i<enemyUnits.length;i++) {
 			var canMove = true;
 			var target = null;
 			// kolizja z sojusznikami
-			for(var j=0;j<enemyUnits.length;j++){
-				if(i!=j && collide(enemyUnits[i].x,enemyUnits[i].y,enemyUnits[j].x,enemyUnits[j].y) && enemyUnits[i].x>enemyUnits[j].x){
+			for(var j=0;j<enemyUnits.length;j++) {
+				if(i!=j && collide(enemyUnits[j].x,enemyUnits[j].y,enemyUnits[i].x,enemyUnits[i].y) && enemyUnits[i].x>enemyUnits[j].x){
 					canMove = false;
 					enemyUnits[i].moving = false;
 					break;
@@ -286,11 +294,11 @@
 
 		var delta = now - before;
 		if(delta > interval){
-			var spawningEnemy = Math.floor(Math.random()*100);
-			if(spawningEnemy == 1)
-				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
 			scrollMap();
 			while(delta>interval){
+				var spawningEnemy = Math.floor(Math.random()*300);
+				if(spawningEnemy == 1)
+					enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
 				movePlayers();
 				moveEnemies();
 				delta -= interval;
@@ -308,7 +316,9 @@
 		ctx.fillRect(0,tileSize,width,1);
 		ctx.fillRect(width-1,0,1,tileSize);
 
-		ctx.fillRect(tileSize*7,0,1,tileSize);
+		var middle = Math.round((width/2)/tileSize) - 1;
+		ctx.fillRect(tileSize*middle, 0, 1, tileSize);
+		ctx.fillRect(tileSize*(middle+1), 0, 1, tileSize);
 	}
 	var drawUI = function() {
 		ctx.fillStyle = "#000";
@@ -318,7 +328,9 @@
 		}
 		ctx.font = "20px Arial";
 		ctx.fillStyle = "#fff"
-		ctx.fillText("$" + money,tileSize*7+10,tileSize/2);
+		var middle = Math.round((width/2)/tileSize) - 1;
+		ctx.drawImage(coin, tileSize*middle + 10, tileSize/6, tileSize/5,tileSize/5);
+		ctx.fillText(money, tileSize*middle + tileSize/5 + 10, tileSize/6+20);
 
 		drawBorder();
 	}
