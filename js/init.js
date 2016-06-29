@@ -71,13 +71,15 @@
 				ctx.scale(-1,1);
 				ctx.translate(this.x,-this.y)
 				ctx.drawImage(this.image[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
-				ctx.fillRect(-(this.x-offset)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75),10);
+				ctx.fillRect(-(this.x-offset)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75), 20);
+				ctx.drawImage(hpBorder, -(this.x-offset)-tileSize/5, this.y, tileSize*0.75, 20);
 				ctx.restore();
 
 			}
 			else{
 				ctx.drawImage(this.image[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
-				ctx.fillRect(-offset + this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75),10);
+				ctx.fillRect(-offset + this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75), 20);
+				ctx.drawImage(hpBorder, -offset + this.x + tileSize/3, this.y, tileSize*0.75, 20);
 			}
 			ctx.fillStyle = "#0f0";
 		}
@@ -187,7 +189,11 @@
 		stevo[i].src = "assets/" + (i+1) + ".png";
 	}
 	units.knight.image = stevo;
-	var totalImages = 4;
+	var hpBorder = new Image();
+	hpBorder.onload = imageLoadCallback;
+	hpBorder.src = "assets/hp.png";
+
+	var totalImages = 5;
 
 	var imageLoadCallback = function() {
 		imageCount++;
@@ -201,7 +207,7 @@
 		enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
 	}
 
-	var loop = function () {
+	var loop = function() {
 		update();
 		draw();
 	}
