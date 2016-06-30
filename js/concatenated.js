@@ -35,14 +35,14 @@ var collide = function(x1,y1,x2,y2) {
 
 var loadFiles = function() {
 	// JSONs
-	$.ajax({
-	  dataType: "json",
-	  url: "data/heroes.json",
-	  data: units,
-	  success: fileLoadCallback,
+	$.getJSON( "https://tismas.github.io/data/heroes.json", function( data ) {
+		$.each( data, function( key, val ) {
+			units[key] = val;
+		});
+		loadImages();
 	});
-	console.log(units);
-
+}
+var loadImages = function() {
 	// images
 	var bg = new Image();
 	bg.onload = fileLoadCallback;
@@ -60,11 +60,10 @@ var loadFiles = function() {
 	var coin = new Image();
 	coin.onload = fileLoadCallback;
 	coin.src = "assets/moneta1.png";
-
+	init();
 }
 
 var init = function() {
-	loadFiles();
 	canvas.width  = width;
 	canvas.height = height;
 	game.appendChild(canvas);
@@ -76,7 +75,7 @@ var init = function() {
 	draw();
 }
 
-init();
+loadFiles();
 
 var Knight = function(x,y) {
 	this.x = x;

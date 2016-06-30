@@ -2,6 +2,12 @@ module.exports = function(grunt){
 
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
+		watch: {
+			scripts: {
+				files: ['js/init.js','js/callbacks.js','js/entities.js','js/globals.js','js/logic.js','js/UI.js'],
+				tasks: ['concat','uglify'],
+			},
+		},
 		concat: {
 			options:{
 				banner: "(function(){\n",
@@ -21,9 +27,14 @@ module.exports = function(grunt){
 			},
 		},
 	});
+	
+	grunt.event.on('watch', function(action, filepath, target) {
+  		grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
+	});
 
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-contrib-watch');
 
-	grunt.registerTask('default',['concat','uglify']);
+	grunt.registerTask('default',['concat','uglify','watch']);
 }
