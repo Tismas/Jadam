@@ -1,4 +1,13 @@
 var loadFiles = function() {
+	// JSONs
+	$.ajax({
+	  dataType: "json",
+	  url: "data/heroes.json",
+	  data: units,
+	  success: fileLoadCallback,
+	});
+	console.log(units);
+
 	// images
 	var bg = new Image();
 	bg.onload = fileLoadCallback;
@@ -17,14 +26,6 @@ var loadFiles = function() {
 	coin.onload = fileLoadCallback;
 	coin.src = "assets/moneta1.png";
 
-	// JSONs
-	$.ajax({
-	  dataType: "json",
-	  url: "data/heroes.json",
-	  data: units,
-	  success: fileLoadCallback(),
-	});
-	console.log(units);
 }
 
 var init = function() {

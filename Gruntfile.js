@@ -9,14 +9,14 @@ module.exports = function(grunt){
 				separator: "\n\n",
 			},
 			dist:{
-				src: ['js/globals.js', 'js/entities.js', 'js/callbacks.js', 'js/UI.js', 'js/logic.js', 'js/init.js'],
-				dest: 'js/contenated.js',
+				src: ['js/globals.js', 'js/init.js', 'js/entities.js', 'js/callbacks.js', 'js/UI.js', 'js/logic.js'],
+				dest: 'js/concatenated.js',
 			},
 		},
 		uglify: {
 			my_target: {
 				files: {
-					'js/main.js': ['js/contenated.js'],
+					'js/main.js': ['js/concatenated.js'],
 				}
 			},
 		},
