@@ -5,7 +5,7 @@
 		"speed": 5,
 		"price": 20,
 		"color": "#0f0",
-		"reward": 30,
+		"reward": 30
 	},
 	"archer": {
 		"hp": 8,
@@ -13,6 +13,6 @@
 		"speed": 6,
 		"price": 50,
 		"color": "#f00",
-		"reward": 80,
+		"reward": 80
 	},
 }
