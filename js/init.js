@@ -4,25 +4,24 @@ var loadFiles = function() {
 		$.each( data, function( key, val ) {
 			units[key] = val;
 		});
+		fileLoadCallback();
 		loadImages();
-	});
+	}).fail(function(){
+		console.log("Failed to load json");
+	});;
 }
 var loadImages = function() {
 	// images
-	var bg = new Image();
 	bg.onload = fileLoadCallback;
 	bg.src = "assets/background.png";
-	var stevo = [];
 	for(var i=0;i<3;i++){
 		stevo.push(new Image());
 		stevo[i].onload = fileLoadCallback;
 		stevo[i].src = "assets/" + (i+1) + ".png";
 	}
 	units.knight.image = stevo;
-	var hpBorder = new Image();
 	hpBorder.onload = fileLoadCallback;
 	hpBorder.src = "assets/hp.png";
-	var coin = new Image();
 	coin.onload = fileLoadCallback;
 	coin.src = "assets/moneta1.png";
 	init();

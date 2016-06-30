@@ -1,5 +1,7 @@
-var units;
+var units = {};	// JSON's
+var stevo = [], bg = new Image(), hpBorder = new Image(), coin = new Image();
 var totalFiles 	= 7;
+
 var filesLoaded = 0;
 var game 		=	document.getElementById('game');
 var canvas 		= 	document.createElement('canvas');
