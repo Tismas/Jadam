@@ -1,0 +1,27 @@
+{
+  "name": "Jadam",
+  "version": "0.0.1",
+  "description": "Incremental game",
+  "main": "js/init.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tismas/tismas.github.io"
+  },
+  "keywords": [
+    "Jadam"
+  ],
+  "author": "Tismas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tismas/tismas.github.io/issues"
+  },
+  "homepage": "http://tismas.github.io",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-uglify": "^1.0.1"
+  }
+}
