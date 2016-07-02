@@ -14,12 +14,27 @@ var loadImages = function() {
 	// images
 	bg.onload = fileLoadCallback;
 	bg.src = "assets/background.png";
-	for(var i=0;i<3;i++){
+	for(var i=0;i<3;i++) {
 		stevo.push(new Image());
 		stevo[i].onload = fileLoadCallback;
 		stevo[i].src = "assets/" + (i+1) + ".png";
 	}
+	for(var i=3;i<6;i++) {
+		stevo.push(new Image());
+		stevo[i].onload = fileLoadCallback;
+		stevo[i].src = "assets/fightstance" + (i-2) + ".png";
+	}
 	units.knight.image = stevo;
+	for(var i=0;i<3;i++) {
+		sword.push(new Image());
+		sword[i].onload = fileLoadCallback;
+		sword[i].src = "assets/sword_position" + (i+1) + ".png";
+	}
+	units.knight.weapon = sword;
+	anvil[0].onload = fileLoadCallback;
+	anvil[0].src = "assets/anvil.png";
+	anvil[1].onload = fileLoadCallback;
+	anvil[1].src = "assets/anvil2.png";
 	hpBorder.onload = fileLoadCallback;
 	hpBorder.src = "assets/hp.png";
 	coin.onload = fileLoadCallback;

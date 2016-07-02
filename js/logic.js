@@ -30,6 +30,10 @@ var movePlayers = function() {
 			playerUnits[i].moving = true;
 		}
 		else if(target != null) {
+			if(playerUnits[i].swordFrame == 0)
+				playerUnits[i].swordFrame = 1;
+			if(playerUnits[i].frame <= 3)
+				playerUnits[i].frame = 4;
 			playerUnits[i].attack(target);
 		}
 		playerUnits[i].update();
@@ -61,6 +65,10 @@ var moveEnemies = function() {
 			enemyUnits[i].moving = true;
 		}
 		else if(target!=null) {
+			if(enemyUnits[i].swordFrame == 0)
+				enemyUnits[i].swordFrame = 1;
+			if(enemyUnits[i].frame <= 3)
+				enemyUnits[i].frame = 4;
 			enemyUnits[i].attack(target);
 		}
 		enemyUnits[i].update();
@@ -74,11 +82,12 @@ var update = function() {
 	if(delta > interval){
 		scrollMap();
 		while(delta>interval){
-			var spawningEnemy = Math.floor(Math.random()*300);
+			var spawningEnemy = Math.floor(Math.random()*100);
 			if(spawningEnemy == 1)
 				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
 			movePlayers();
 			moveEnemies();
+			updateUI();
 			delta -= interval;
 		}
 		before = now;
@@ -87,31 +96,6 @@ var update = function() {
 	requestAnimationFrame(draw);
 }
 
-var drawBorder = function() {
-	ctx.fillStyle = "#fff";
-	ctx.fillRect(0,0,width,1);
-	ctx.fillRect(0,0,2,tileSize);
-	ctx.fillRect(0,tileSize,width,1);
-	ctx.fillRect(width-1,0,1,tileSize);
-
-	var middle = Math.round((width/2)/tileSize) - 1;
-	ctx.fillRect(tileSize*middle, 0, 1, tileSize);
-	ctx.fillRect(tileSize*(middle+1), 0, 1, tileSize);
-}
-var drawUI = function() {
-	ctx.fillStyle = "#000";
-	ctx.fillRect(0,0,tileSize*widthT,tileSize);
-	for(var i=0;i<unitButtons.length;i++){
-		unitButtons[i].draw();
-	}
-	ctx.font = "20px Arial";
-	ctx.fillStyle = "#fff"
-	var middle = Math.round((width/2)/tileSize) - 1;
-	ctx.drawImage(coin, tileSize*middle + 10, tileSize/6, tileSize/5,tileSize/5);
-	ctx.fillText(money, tileSize*middle + tileSize/5 + 10, tileSize/6+20);
-
-	drawBorder();
-}
 
 var draw = function () {
 	ctx.fillStyle = '#000';

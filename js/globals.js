@@ -1,6 +1,6 @@
 var units = {};	// JSON's
-var stevo = [], bg = new Image(), hpBorder = new Image(), coin = new Image();
-var totalFiles 	= 7;
+var stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()];
+var totalFiles 	= 15;
 
 var filesLoaded = 0;
 var game 		=	document.getElementById('game');
@@ -23,9 +23,12 @@ var now			=	new Date();
 var before		=	new Date();
 
 var money		=	100;
+var isAnvilClicked	=	0;
+var anvilX		=	0;
 var playerUnits =	[];
 var enemyUnits	=	[];
 var unitButtons =	[];
+var particles	=	[];
 var bossHp		=	100;
 
 var collide = function(x1,y1,x2,y2) {

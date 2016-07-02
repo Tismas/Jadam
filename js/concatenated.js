@@ -1,7 +1,7 @@
 (function(){
 var units = {};	// JSON's
-var stevo = [], bg = new Image(), hpBorder = new Image(), coin = new Image();
-var totalFiles 	= 7;
+var stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()];
+var totalFiles 	= 15;
 
 var filesLoaded = 0;
 var game 		=	document.getElementById('game');
@@ -24,9 +24,12 @@ var now			=	new Date();
 var before		=	new Date();
 
 var money		=	100;
+var isAnvilClicked	=	0;
+var anvilX		=	0;
 var playerUnits =	[];
 var enemyUnits	=	[];
 var unitButtons =	[];
+var particles	=	[];
 var bossHp		=	100;
 
 var collide = function(x1,y1,x2,y2) {
@@ -51,12 +54,27 @@ var loadImages = function() {
 	// images
 	bg.onload = fileLoadCallback;
 	bg.src = "assets/background.png";
-	for(var i=0;i<3;i++){
+	for(var i=0;i<3;i++) {
 		stevo.push(new Image());
 		stevo[i].onload = fileLoadCallback;
 		stevo[i].src = "assets/" + (i+1) + ".png";
 	}
+	for(var i=3;i<6;i++) {
+		stevo.push(new Image());
+		stevo[i].onload = fileLoadCallback;
+		stevo[i].src = "assets/fightstance" + (i-2) + ".png";
+	}
 	units.knight.image = stevo;
+	for(var i=0;i<3;i++) {
+		sword.push(new Image());
+		sword[i].onload = fileLoadCallback;
+		sword[i].src = "assets/sword_position" + (i+1) + ".png";
+	}
+	units.knight.weapon = sword;
+	anvil[0].onload = fileLoadCallback;
+	anvil[0].src = "assets/anvil.png";
+	anvil[1].onload = fileLoadCallback;
+	anvil[1].src = "assets/anvil2.png";
 	hpBorder.onload = fileLoadCallback;
 	hpBorder.src = "assets/hp.png";
 	coin.onload = fileLoadCallback;
@@ -90,7 +108,9 @@ var Knight = function(x,y) {
 	this.timeToAttack = 0;
 
 	this.image = units.knight.image;
+	this.weapon = units.knight.weapon;
 	this.moving = true;
+	this.swordFrame = 0;
 	this.frame = 0;
 	this.frameTime = 5;
 	this.frameCnt = 0;
@@ -99,10 +119,22 @@ var Knight = function(x,y) {
 	this.attack = function(target) {
 		if(this.timeToAttack == 0 && this.hp > 0) {
 			this.timeToAttack = this.attackCooldown;
+			this.prepareNextAttack();
+			setTimeout(this.strike.bind(this, target), 200);
+		}
+	}
+	this.prepareNextAttack = function() {
+		this.frame = 4;
+		this.swordFrame = 1;
+	}
+	this.strike = function(target) {
+		if(this.hp > 0){
+			this.swordFrame = 2;
+			this.frame = 5;
 			target.hp -= this.dmg;
-			if(target.hp <= 0 && enemyUnits.indexOf(target) != -1)
+			if(target.hp <= 0)
 				money += target.reward;
-			// TODO odpalene animacji ataku
+			setTimeout(this.prepareNextAttack.bind(this),100);
 		}
 	}
 	this.die = function() {
@@ -124,17 +156,39 @@ var Knight = function(x,y) {
 			ctx.save();
 			ctx.translate(this.x,this.y);
 			ctx.scale(-1,1);
-			ctx.translate(this.x,-this.y)
+			ctx.translate(this.x,-this.y);
+			if(this.moving){
+				if(this.frame>=3)
+					this.frame = 1;
+				ctx.drawImage(this.weapon[0], -(this.x - offset + tileSize/4 + (2-this.frame)*(tileSize/10)), this.y + tileSize/4, tileSize,tileSize);
+			}
+			else{
+				if(this.swordFrame == 2)
+					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset + tileSize/3), this.y + tileSize/4, tileSize,tileSize);
+				else
+					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset + tileSize/4), this.y + tileSize/4, tileSize,tileSize);
+			}
 			ctx.drawImage(this.image[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
-			ctx.fillRect(-(this.x-offset)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75), 20);
-			ctx.drawImage(hpBorder, -(this.x-offset)-tileSize/5, this.y, tileSize*0.75, 20);
+			ctx.fillRect(-(this.x-offset)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+			ctx.drawImage(hpBorder, -(this.x-offset)-tileSize/5, this.y, tileSize*0.75, tileSize/8);
 			ctx.restore();
 
 		}
 		else{
+			if(this.moving){
+				if(this.frame>=3)
+					this.frame = 1;
+				ctx.drawImage(this.weapon[0], this.x - offset + tileSize/4 - (2-this.frame)*(tileSize/10), this.y + tileSize/4, tileSize,tileSize);
+			}
+			else{
+				if(this.swordFrame == 2)
+					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/3, this.y + tileSize/4, tileSize,tileSize);
+				else
+					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/4, this.y + tileSize/4, tileSize,tileSize);
+			}
 			ctx.drawImage(this.image[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
-			ctx.fillRect(-offset + this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75), 20);
-			ctx.drawImage(hpBorder, -offset + this.x + tileSize/3, this.y, tileSize*0.75, 20);
+			ctx.fillRect(-offset + this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+			ctx.drawImage(hpBorder, -offset + this.x + tileSize/3, this.y, tileSize*0.75, tileSize/8);
 		}
 		ctx.fillStyle = "#0f0";
 	}
@@ -143,14 +197,14 @@ var Knight = function(x,y) {
 			this.timeToAttack--;
 		if(this.hp<=0 || this.x >= widthT*tileSize || this.x < 0)
 			this.die();
-		if(!this.moving)
+		if(!this.moving && (this.frame == 1 || this.frame == 2 ))
 			this.frame = 0;
-		else {
+		else if(this.moving) {
 			this.frameCnt++;
 			if(this.frameCnt>=this.frameTime){
 				this.frame++;
 				this.frameCnt=0;
-				if(this.frame==this.frames) this.frame = 1;
+				if(this.frame>=this.frames) this.frame = 1;
 			}
 		}
 	}
@@ -162,23 +216,26 @@ var fileLoadCallback = function() {
 }
 
 var resizeCallback = function() {
+	var aspectRatioX = window.innerWidth/width;
+	var aspectRatioY = window.innerHeight/height;
 	width = window.innerWidth;
 	height = window.innerHeight;
 	canvas.width = width;
 	canvas.height = height;
-	var oldTileSize = tileSize;
 	tileSize = Math.floor(height/heightT);
 	for(var i=0;i<unitButtons.length;i++) {
 		unitButtons[i].x = i*tileSize;
 	}
 	for(var i=0;i<playerUnits.length;i++){
-		var tilePos = playerUnits[i].x/oldTileSize;
-		playerUnits[i].x = tilePos * tileSize;
+		playerUnits[i].x *= aspectRatioX;
+		playerUnits[i].y *= aspectRatioY;
 	}
 	for(var i=0;i<enemyUnits.length;i++){
-		var tilePos = enemyUnits[i].x/oldTileSize;
-		enemyUnits[i].x = tilePos * tileSize;
+		enemyUnits[i].x *= aspectRatioX;
+		enemyUnits[i].y *= aspectRatioY;
 	}
+	offset *= aspectRatioX;
+	if(offset>widthT*tileSize-width) offset = widthT*tileSize-width;
 	update();
 	draw();
 }
@@ -187,6 +244,7 @@ canvas.onmousemove = function(e) {
 	mouseX = e.x;
 	mouseY = e.y;
 }
+var unclickAnvil = function() { isAnvilClicked = 0; }
 canvas.onclick = function(e) {
 	if(e.x<=tileSize && e.y>=tileSize) {
 		activeRow = Math.floor(mouseY/tileSize);
@@ -198,9 +256,31 @@ canvas.onclick = function(e) {
 		else if(unitButtons[i].collide(e.x,e.y))
 			unitButtons[i].fail();
 	}
+	if(e.x >= anvilX && e.x <= anvilX + tileSize && e.y >= 0 && e.y <= tileSize){
+		isAnvilClicked = 1;
+		money++;
+		particles.push(new One(anvilX + tileSize/3 + (-tileSize/8 + Math.random()*(tileSize/4)), tileSize/2));
+		setTimeout(unclickAnvil,125);
+	}
 }
 
 
+
+var One = function(x,y){
+	this.x = x;
+	this.y = y;
+	this.draw = function() {
+		ctx.fillStyle = "rgba(255,255,255," + this.y / y + ")";
+		ctx.fillText("+1",this.x,this.y);
+	}
+	this.update = function() {
+		this.y--;
+		if(this.y <= 0){
+			particles.splice(particles.indexOf(this),1);
+			delete this;
+		}
+	}
+}
 
 var UnitButton = function (x,y,unitDesc,unitClass,background,hover) {
 	this.x = x;
@@ -237,7 +317,9 @@ var UnitButton = function (x,y,unitDesc,unitClass,background,hover) {
 		else
 			ctx.fillStyle = this.background;
 		ctx.fillRect(this.x,this.y,tileSize,tileSize);
-		ctx.drawImage(unitDesc.image[0], this.x + tileSize/5, this.y + tileSize/10, tileSize- 2*tileSize/5, tileSize - 2*tileSize/5);
+		var sizeOfImage = tileSize - 2*tileSize/5;
+		ctx.drawImage(unitDesc.weapon[0], this.x + tileSize/5, this.y + tileSize/10, sizeOfImage, sizeOfImage);
+		ctx.drawImage(unitDesc.image[0], this.x + tileSize/5, this.y + tileSize/10, sizeOfImage, sizeOfImage);
 		ctx.fillStyle = "#fff";
 		ctx.font = "20px Arial";
 		var price = "$" + this.cost;
@@ -250,6 +332,45 @@ var UnitButton = function (x,y,unitDesc,unitClass,background,hover) {
 			this.succeed = false;
 		}
 	}
+}
+
+var drawBorder = function() {
+	ctx.fillStyle = "#fff";
+	ctx.fillRect(0,0,width,1);
+	ctx.fillRect(0,0,2,tileSize);
+	ctx.fillRect(0,tileSize,width,1);
+	ctx.fillRect(width-1,0,1,tileSize);
+
+	var middle = Math.round((width/2)/tileSize) - 1;
+	ctx.fillRect(tileSize*middle, 0, 1, tileSize);
+	ctx.fillRect(tileSize*(middle+1), 0, 1, tileSize);
+}
+var updateUI = function() {
+	for(var i=0;i<particles.length;i++){
+		particles[i].update();
+	}
+}
+var drawUI = function() {
+	ctx.fillStyle = "#000";
+	ctx.fillRect(0,0,tileSize*widthT,tileSize);
+	for(var i=0;i<unitButtons.length;i++){
+		unitButtons[i].draw();
+	}
+	ctx.font = "20px Arial";
+	ctx.fillStyle = "#fff"
+	var middle = Math.round((width/2)/tileSize) - 1;
+	ctx.drawImage(coin, tileSize*middle + 10, tileSize/6, tileSize/5,tileSize/5);
+	ctx.fillText(money, tileSize*middle + tileSize/5 + 10, tileSize/6+20);
+
+	//anvil
+	anvilX = tileSize*(middle+1);
+	ctx.drawImage(anvil[isAnvilClicked], anvilX, 0, tileSize, tileSize);
+
+	for(var i=0;i<particles.length;i++){
+		particles[i].draw();
+	}
+
+	drawBorder();
 }
 
 var scrollMap = function() {
@@ -284,6 +405,10 @@ var movePlayers = function() {
 			playerUnits[i].moving = true;
 		}
 		else if(target != null) {
+			if(playerUnits[i].swordFrame == 0)
+				playerUnits[i].swordFrame = 1;
+			if(playerUnits[i].frame <= 3)
+				playerUnits[i].frame = 4;
 			playerUnits[i].attack(target);
 		}
 		playerUnits[i].update();
@@ -315,6 +440,10 @@ var moveEnemies = function() {
 			enemyUnits[i].moving = true;
 		}
 		else if(target!=null) {
+			if(enemyUnits[i].swordFrame == 0)
+				enemyUnits[i].swordFrame = 1;
+			if(enemyUnits[i].frame <= 3)
+				enemyUnits[i].frame = 4;
 			enemyUnits[i].attack(target);
 		}
 		enemyUnits[i].update();
@@ -328,11 +457,12 @@ var update = function() {
 	if(delta > interval){
 		scrollMap();
 		while(delta>interval){
-			var spawningEnemy = Math.floor(Math.random()*300);
+			var spawningEnemy = Math.floor(Math.random()*100);
 			if(spawningEnemy == 1)
 				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
 			movePlayers();
 			moveEnemies();
+			updateUI();
 			delta -= interval;
 		}
 		before = now;
@@ -341,31 +471,6 @@ var update = function() {
 	requestAnimationFrame(draw);
 }
 
-var drawBorder = function() {
-	ctx.fillStyle = "#fff";
-	ctx.fillRect(0,0,width,1);
-	ctx.fillRect(0,0,2,tileSize);
-	ctx.fillRect(0,tileSize,width,1);
-	ctx.fillRect(width-1,0,1,tileSize);
-
-	var middle = Math.round((width/2)/tileSize) - 1;
-	ctx.fillRect(tileSize*middle, 0, 1, tileSize);
-	ctx.fillRect(tileSize*(middle+1), 0, 1, tileSize);
-}
-var drawUI = function() {
-	ctx.fillStyle = "#000";
-	ctx.fillRect(0,0,tileSize*widthT,tileSize);
-	for(var i=0;i<unitButtons.length;i++){
-		unitButtons[i].draw();
-	}
-	ctx.font = "20px Arial";
-	ctx.fillStyle = "#fff"
-	var middle = Math.round((width/2)/tileSize) - 1;
-	ctx.drawImage(coin, tileSize*middle + 10, tileSize/6, tileSize/5,tileSize/5);
-	ctx.fillText(money, tileSize*middle + tileSize/5 + 10, tileSize/6+20);
-
-	drawBorder();
-}
 
 var draw = function () {
 	ctx.fillStyle = '#000';
