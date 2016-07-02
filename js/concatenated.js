@@ -132,7 +132,7 @@ var Knight = function(x,y) {
 			this.swordFrame = 2;
 			this.frame = 5;
 			target.hp -= this.dmg;
-			if(target.hp <= 0)
+			if(target.hp <= 0 && enemyUnits.indexOf(target) != -1)
 				money += target.reward;
 			setTimeout(this.prepareNextAttack.bind(this),100);
 		}
