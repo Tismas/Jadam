@@ -12,6 +12,7 @@ var Knight = function(x,y) {
 	this.image = units.knight.image;
 	this.weapon = units.knight.weapon;
 	this.moving = true;
+	this.attacking = false;
 	this.swordFrame = 0;
 	this.frame = 0;
 	this.frameTime = 5;
@@ -19,15 +20,12 @@ var Knight = function(x,y) {
 	this.frames = 3;
 
 	this.attack = function(target) {
-		if(this.timeToAttack == 0 && this.hp > 0) {
+		if(this.timeToAttack == 0 && this.hp > 0 && target.attacking == false) {
 			this.timeToAttack = this.attackCooldown;
 			this.prepareNextAttack();
+			this.attacking = true;
 			setTimeout(this.strike.bind(this, target), 200);
 		}
-	}
-	this.prepareNextAttack = function() {
-		this.frame = 4;
-		this.swordFrame = 1;
 	}
 	this.strike = function(target) {
 		if(this.hp > 0){
@@ -39,6 +37,11 @@ var Knight = function(x,y) {
 			setTimeout(this.prepareNextAttack.bind(this),100);
 		}
 	}
+	this.prepareNextAttack = function() {
+		this.frame = 4;
+		this.swordFrame = 1;
+		this.attacking = false;
+	}
 	this.die = function() {
 		var index = playerUnits.indexOf(this);
 		if(index != -1)
@@ -47,6 +50,7 @@ var Knight = function(x,y) {
 			index = enemyUnits.indexOf(this);
 			enemyUnits.splice(index,1);
 		}
+		delete this;
 	}
 	this.draw = function() {
 		var hpGradient = ctx.createLinearGradient(this.x-offset,this.y,this.x-offset,this.y+20);
@@ -62,17 +66,17 @@ var Knight = function(x,y) {
 			if(this.moving){
 				if(this.frame>=3)
 					this.frame = 1;
-				ctx.drawImage(this.weapon[0], -(this.x - offset + tileSize/4 + (2-this.frame)*(tileSize/10)), this.y + tileSize/4, tileSize,tileSize);
+				ctx.drawImage(this.weapon[0], -(this.x - offset), this.y, tileSize,tileSize);
 			}
 			else{
 				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset + tileSize/3), this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset - tileSize/5), this.y, tileSize,tileSize);
 				else
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset + tileSize/4), this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset), this.y, tileSize,tileSize);
 			}
-			ctx.drawImage(this.image[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
-			ctx.fillRect(-(this.x-offset)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -(this.x-offset)-tileSize/5, this.y, tileSize*0.75, tileSize/8);
+			ctx.drawImage(this.image[this.frame], -(this.x-offset), this.y, tileSize, tileSize);
+			ctx.fillRect(-(this.x - offset - tileSize/8),this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+			ctx.drawImage(hpBorder, -(this.x - offset - tileSize/8), this.y, tileSize*0.75, tileSize/8);
 			ctx.restore();
 
 		}
@@ -80,17 +84,17 @@ var Knight = function(x,y) {
 			if(this.moving){
 				if(this.frame>=3)
 					this.frame = 1;
-				ctx.drawImage(this.weapon[0], this.x - offset + tileSize/4 - (2-this.frame)*(tileSize/10), this.y + tileSize/4, tileSize,tileSize);
+				ctx.drawImage(this.weapon[0], this.x - offset, this.y, tileSize,tileSize);
 			}
 			else{
 				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/3, this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/5, this.y, tileSize,tileSize);
 				else
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/4, this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset, this.y, tileSize,tileSize);
 			}
-			ctx.drawImage(this.image[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
-			ctx.fillRect(-offset + this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -offset + this.x + tileSize/3, this.y, tileSize*0.75, tileSize/8);
+			ctx.drawImage(this.image[this.frame], this.x-offset, this.y, tileSize, tileSize);
+			ctx.fillRect(-offset + this.x + tileSize/8,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+			ctx.drawImage(hpBorder, -offset + this.x + tileSize/8, this.y, tileSize*0.75, tileSize/8);
 		}
 		ctx.fillStyle = "#0f0";
 	}

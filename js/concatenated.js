@@ -1,14 +1,14 @@
 (function(){
 var units = {};	// JSON's
-var stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()];
-var totalFiles 	= 15;
+var stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()], boss = [];
+var totalFiles 	= 16;
 
 var filesLoaded = 0;
 var game 		=	document.getElementById('game');
 var canvas 		= 	document.createElement('canvas');
 var ctx 		= 	canvas.getContext('2d');
 var imageCount	=	0;
-var heightT 	= 	7;	// rows+1
+var heightT 	= 	6;	// rows+1
 var widthT		=	30;
 var width 		= 	window.innerWidth;
 var height 		= 	window.innerHeight;
@@ -23,7 +23,7 @@ var scrollSpeed =	15;
 var now			=	new Date();
 var before		=	new Date();
 
-var money		=	100;
+var money		=	1000;
 var isAnvilClicked	=	0;
 var anvilX		=	0;
 var playerUnits =	[];
@@ -53,7 +53,7 @@ var loadFiles = function() {
 var loadImages = function() {
 	// images
 	bg.onload = fileLoadCallback;
-	bg.src = "assets/background.png";
+	bg.src = "assets/bgTile1.png";
 	for(var i=0;i<3;i++) {
 		stevo.push(new Image());
 		stevo[i].onload = fileLoadCallback;
@@ -79,6 +79,13 @@ var loadImages = function() {
 	hpBorder.src = "assets/hp.png";
 	coin.onload = fileLoadCallback;
 	coin.src = "assets/moneta1.png";
+	
+	for(var i=0;i<4;i++){
+		boss.push(new Image());
+		boss[i].onload = fileLoadCallback;
+		boss[i].src = "assets/boss" + (i+1) + ".png";
+	}
+	
 	init();
 }
 
@@ -110,6 +117,7 @@ var Knight = function(x,y) {
 	this.image = units.knight.image;
 	this.weapon = units.knight.weapon;
 	this.moving = true;
+	this.attacking = false;
 	this.swordFrame = 0;
 	this.frame = 0;
 	this.frameTime = 5;
@@ -117,15 +125,12 @@ var Knight = function(x,y) {
 	this.frames = 3;
 
 	this.attack = function(target) {
-		if(this.timeToAttack == 0 && this.hp > 0) {
+		if(this.timeToAttack == 0 && this.hp > 0 && target.attacking == false) {
 			this.timeToAttack = this.attackCooldown;
 			this.prepareNextAttack();
+			this.attacking = true;
 			setTimeout(this.strike.bind(this, target), 200);
 		}
-	}
-	this.prepareNextAttack = function() {
-		this.frame = 4;
-		this.swordFrame = 1;
 	}
 	this.strike = function(target) {
 		if(this.hp > 0){
@@ -137,6 +142,11 @@ var Knight = function(x,y) {
 			setTimeout(this.prepareNextAttack.bind(this),100);
 		}
 	}
+	this.prepareNextAttack = function() {
+		this.frame = 4;
+		this.swordFrame = 1;
+		this.attacking = false;
+	}
 	this.die = function() {
 		var index = playerUnits.indexOf(this);
 		if(index != -1)
@@ -145,6 +155,7 @@ var Knight = function(x,y) {
 			index = enemyUnits.indexOf(this);
 			enemyUnits.splice(index,1);
 		}
+		delete this;
 	}
 	this.draw = function() {
 		var hpGradient = ctx.createLinearGradient(this.x-offset,this.y,this.x-offset,this.y+20);
@@ -160,17 +171,17 @@ var Knight = function(x,y) {
 			if(this.moving){
 				if(this.frame>=3)
 					this.frame = 1;
-				ctx.drawImage(this.weapon[0], -(this.x - offset + tileSize/4 + (2-this.frame)*(tileSize/10)), this.y + tileSize/4, tileSize,tileSize);
+				ctx.drawImage(this.weapon[0], -(this.x - offset), this.y, tileSize,tileSize);
 			}
 			else{
 				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset + tileSize/3), this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset - tileSize/5), this.y, tileSize,tileSize);
 				else
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset + tileSize/4), this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset), this.y, tileSize,tileSize);
 			}
-			ctx.drawImage(this.image[this.frame], -(this.x-offset + tileSize/4), this.y + tileSize/4,tileSize,tileSize);
-			ctx.fillRect(-(this.x-offset)-tileSize/5,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -(this.x-offset)-tileSize/5, this.y, tileSize*0.75, tileSize/8);
+			ctx.drawImage(this.image[this.frame], -(this.x-offset), this.y, tileSize, tileSize);
+			ctx.fillRect(-(this.x - offset - tileSize/8),this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+			ctx.drawImage(hpBorder, -(this.x - offset - tileSize/8), this.y, tileSize*0.75, tileSize/8);
 			ctx.restore();
 
 		}
@@ -178,17 +189,17 @@ var Knight = function(x,y) {
 			if(this.moving){
 				if(this.frame>=3)
 					this.frame = 1;
-				ctx.drawImage(this.weapon[0], this.x - offset + tileSize/4 - (2-this.frame)*(tileSize/10), this.y + tileSize/4, tileSize,tileSize);
+				ctx.drawImage(this.weapon[0], this.x - offset, this.y, tileSize,tileSize);
 			}
 			else{
 				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/3, this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/5, this.y, tileSize,tileSize);
 				else
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/4, this.y + tileSize/4, tileSize,tileSize);
+					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset, this.y, tileSize,tileSize);
 			}
-			ctx.drawImage(this.image[this.frame], this.x-offset + tileSize/4, this.y + tileSize/4,tileSize,tileSize);
-			ctx.fillRect(-offset + this.x+tileSize/3,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -offset + this.x + tileSize/3, this.y, tileSize*0.75, tileSize/8);
+			ctx.drawImage(this.image[this.frame], this.x-offset, this.y, tileSize, tileSize);
+			ctx.fillRect(-offset + this.x + tileSize/8,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+			ctx.drawImage(hpBorder, -offset + this.x + tileSize/8, this.y, tileSize*0.75, tileSize/8);
 		}
 		ctx.fillStyle = "#0f0";
 	}
@@ -471,13 +482,18 @@ var update = function() {
 	requestAnimationFrame(draw);
 }
 
-
 var draw = function () {
 	ctx.fillStyle = '#000';
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
 	// draw background
-	ctx.drawImage(bg,-offset,tileSize,widthT*tileSize,height-tileSize);
+	var firstTile = Math.floor(offset/tileSize);
+	var widthScreenTiles = Math.floor(width/tileSize);
+	for(var i= firstTile; i <= firstTile + widthScreenTiles + 1; i++) {
+		for(var j=0;j<heightT;j++) {
+			ctx.drawImage(bg, i*tileSize-offset, j*tileSize, tileSize, tileSize);
+		}
+	}
 	
 	// draw foreground
 	var selected = ctx.createLinearGradient(-offset-tileSize/8,0,tileSize,0);

@@ -13,7 +13,7 @@ var loadFiles = function() {
 var loadImages = function() {
 	// images
 	bg.onload = fileLoadCallback;
-	bg.src = "assets/background.png";
+	bg.src = "assets/bgTile1.png";
 	for(var i=0;i<3;i++) {
 		stevo.push(new Image());
 		stevo[i].onload = fileLoadCallback;
@@ -39,6 +39,13 @@ var loadImages = function() {
 	hpBorder.src = "assets/hp.png";
 	coin.onload = fileLoadCallback;
 	coin.src = "assets/moneta1.png";
+	
+	for(var i=0;i<4;i++){
+		boss.push(new Image());
+		boss[i].onload = fileLoadCallback;
+		boss[i].src = "assets/boss" + (i+1) + ".png";
+	}
+	
 	init();
 }
 

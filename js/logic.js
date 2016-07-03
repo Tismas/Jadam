@@ -96,13 +96,18 @@ var update = function() {
 	requestAnimationFrame(draw);
 }
 
-
 var draw = function () {
 	ctx.fillStyle = '#000';
 	ctx.fillRect(0,0,canvas.width,canvas.height);
 
 	// draw background
-	ctx.drawImage(bg,-offset,tileSize,widthT*tileSize,height-tileSize);
+	var firstTile = Math.floor(offset/tileSize);
+	var widthScreenTiles = Math.floor(width/tileSize);
+	for(var i= firstTile; i <= firstTile + widthScreenTiles + 1; i++) {
+		for(var j=0;j<heightT;j++) {
+			ctx.drawImage(bg, i*tileSize-offset, j*tileSize, tileSize, tileSize);
+		}
+	}
 	
 	// draw foreground
 	var selected = ctx.createLinearGradient(-offset-tileSize/8,0,tileSize,0);

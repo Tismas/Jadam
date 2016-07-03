@@ -1,13 +1,13 @@
 var units = {};	// JSON's
-var stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()];
-var totalFiles 	= 15;
+var stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()], boss = [];
+var totalFiles 	= 16;
 
 var filesLoaded = 0;
 var game 		=	document.getElementById('game');
 var canvas 		= 	document.createElement('canvas');
 var ctx 		= 	canvas.getContext('2d');
 var imageCount	=	0;
-var heightT 	= 	7;	// rows+1
+var heightT 	= 	6;	// rows+1
 var widthT		=	30;
 var width 		= 	window.innerWidth;
 var height 		= 	window.innerHeight;
@@ -22,7 +22,7 @@ var scrollSpeed =	15;
 var now			=	new Date();
 var before		=	new Date();
 
-var money		=	100;
+var money		=	1000;
 var isAnvilClicked	=	0;
 var anvilX		=	0;
 var playerUnits =	[];
