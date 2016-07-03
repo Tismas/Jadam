@@ -14,18 +14,13 @@ var loadImages = function() {
 	// images
 	bg.onload = fileLoadCallback;
 	bg.src = "assets/bgTile1.png";
-	for(var i=0;i<3;i++) {
+	for(var i=0;i<6;i++) {
 		stevo.push(new Image());
 		stevo[i].onload = fileLoadCallback;
-		stevo[i].src = "assets/" + (i+1) + ".png";
-	}
-	for(var i=3;i<6;i++) {
-		stevo.push(new Image());
-		stevo[i].onload = fileLoadCallback;
-		stevo[i].src = "assets/fightstance" + (i-2) + ".png";
+		stevo[i].src = "assets/stevo" + (i+1) + ".png";
 	}
 	units.knight.image = stevo;
-	for(var i=0;i<3;i++) {
+	for(var i=0;i<6;i++) {
 		sword.push(new Image());
 		sword[i].onload = fileLoadCallback;
 		sword[i].src = "assets/sword_position" + (i+1) + ".png";

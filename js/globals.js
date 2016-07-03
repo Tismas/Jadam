@@ -36,3 +36,8 @@ var collide = function(x1,y1,x2,y2) {
 		return true;
 	return false;
 }
+var collideEntities = function(entity1, entity2) {
+	if((entity1.x + tileSize >= entity2.x && entity2.x > entity1.x || entity1.x - tileSize <= entity2.x && entity1.x > entity2.x) && entity1.y == entity2.y)
+		return true;
+	return false;
+}

@@ -5,73 +5,62 @@ var scrollMap = function() {
 		offset+=scrollSpeed;
 }
 var movePlayers = function() {
-	for(var i=0;i<playerUnits.length;i++){
+	for(var i=0, playerCount = playerUnits.length, enemyCount = enemyUnits.length; i<playerCount; i++){
+		var playerAtI = playerUnits[i];
+		if(!playerAtI) continue;
 		var canMove = true;
-		var target = null;
+		var target = playerAtI.getTarget();
 		// kolizja ze swoimi
-		for(var j=0;j<playerUnits.length;j++){
-			if(i!=j && collide(playerUnits[i].x,playerUnits[i].y,playerUnits[j].x,playerUnits[j].y) && playerUnits[i].x<playerUnits[j].x){
+		for(var j=0;j<playerCount;j++){
+			if(!playerUnits[j]) continue;
+			if(i!=j && collideEntities(playerAtI, playerUnits[j]) && playerAtI.x<playerUnits[j].x){
 				canMove = false;
-				playerUnits[i].moving = false;
+				playerAtI.moving = false;
 				break;
 			}
 		}
-		// kolizja z przeciwnikami
-		for(var j=0;j<enemyUnits.length;j++){
-			if(collide(playerUnits[i].x,playerUnits[i].y,enemyUnits[j].x - tileSize,enemyUnits[j].y)){
-				canMove = false;
-				playerUnits[i].moving = false;
-				target = enemyUnits[j];
-				break;
-			}
+		if(target) {
+			canMove = false;
+			playerAtI.moving = false;
+			if(playerAtI.frame <= 3)
+				playerAtI.frame = 4;
+			playerAtI.attack(target);
 		}
 		if(canMove) {
-			playerUnits[i].x += playerUnits[i].speed;
-			playerUnits[i].moving = true;
+			playerAtI.x += playerAtI.speed;
+			playerAtI.moving = true;
 		}
-		else if(target != null) {
-			if(playerUnits[i].swordFrame == 0)
-				playerUnits[i].swordFrame = 1;
-			if(playerUnits[i].frame <= 3)
-				playerUnits[i].frame = 4;
-			playerUnits[i].attack(target);
-		}
-		playerUnits[i].update();
+		playerAtI.update();
 	}	
 }
 var moveEnemies = function() {
-	for(var i=0;i<enemyUnits.length;i++) {
+	for(var i=0, enemyCount = enemyUnits.length, playerCount = playerUnits.length; i< enemyCount; i++) {
+		var enemyAtI = enemyUnits[i];
+		if(!enemyAtI) continue;
 		var canMove = true;
-		var target = null;
+		var target = enemyAtI.getTarget();
 		// kolizja z sojusznikami
-		for(var j=0;j<enemyUnits.length;j++) {
-			if(i!=j && collide(enemyUnits[j].x,enemyUnits[j].y,enemyUnits[i].x,enemyUnits[i].y) && enemyUnits[i].x>enemyUnits[j].x){
+		for(var j=0; j < enemyCount; j++) {
+			var enemyAtJ = enemyUnits[j];
+			if(!enemyAtJ) continue;
+			if(i!=j && collideEntities(enemyAtJ,enemyAtI) && enemyAtI.x>enemyAtJ.x){
 				canMove = false;
-				enemyUnits[i].moving = false;
+				enemyAtI.moving = false;
 				break;
 			}
 		}
-		// kolizja z graczem
-		for(var j=0;j<playerUnits.length;j++){
-			if(collide(playerUnits[j].x,playerUnits[j].y,enemyUnits[i].x - tileSize,enemyUnits[i].y)){
-				canMove = false;
-				enemyUnits[i].moving = false;
-				target = playerUnits[j];
-				break;
-			}
+		if(target) {
+			canMove = false;
+			enemyAtI.moving = false;
+			if(enemyAtI.frame <= 3)
+				enemyAtI.frame = 4;
+			enemyAtI.attack(target);
 		}
 		if(canMove) {
-			enemyUnits[i].x -= enemyUnits[i].speed;
-			enemyUnits[i].moving = true;
+			enemyAtI.x -= enemyAtI.speed;
+			enemyAtI.moving = true;
 		}
-		else if(target!=null) {
-			if(enemyUnits[i].swordFrame == 0)
-				enemyUnits[i].swordFrame = 1;
-			if(enemyUnits[i].frame <= 3)
-				enemyUnits[i].frame = 4;
-			enemyUnits[i].attack(target);
-		}
-		enemyUnits[i].update();
+		enemyAtI.update();
 	}
 }
 
@@ -84,7 +73,7 @@ var update = function() {
 		while(delta>interval){
 			var spawningEnemy = Math.floor(Math.random()*500);
 			if(spawningEnemy < 5)
-				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(spawningEnemy+1)));
+				enemyUnits.push(new Knight(widthT*tileSize, tileSize*(spawningEnemy+1), true));
 			movePlayers();
 			moveEnemies();
 			updateUI();
@@ -127,10 +116,10 @@ var draw = function () {
 		}
 	}
 
-	for(var i=0;i<playerUnits.length;i++) {
+	for(var i=0, playerCount = playerUnits.length; i < playerCount; i++) {
 		playerUnits[i].draw();
 	}
-	for(var i=0;i<enemyUnits.length;i++) {
+	for(var i=0, enemiesCount=enemyUnits.length; i < enemiesCount; i++) {
 		enemyUnits[i].draw();
 	}
 

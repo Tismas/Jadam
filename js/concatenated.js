@@ -37,6 +37,11 @@ var collide = function(x1,y1,x2,y2) {
 		return true;
 	return false;
 }
+var collideEntities = function(entity1, entity2) {
+	if((entity1.x + tileSize >= entity2.x && entity2.x > entity1.x || entity1.x - tileSize <= entity2.x && entity1.x > entity2.x) && entity1.y == entity2.y)
+		return true;
+	return false;
+}
 
 var loadFiles = function() {
 	// JSONs
@@ -54,18 +59,13 @@ var loadImages = function() {
 	// images
 	bg.onload = fileLoadCallback;
 	bg.src = "assets/bgTile1.png";
-	for(var i=0;i<3;i++) {
+	for(var i=0;i<6;i++) {
 		stevo.push(new Image());
 		stevo[i].onload = fileLoadCallback;
-		stevo[i].src = "assets/" + (i+1) + ".png";
-	}
-	for(var i=3;i<6;i++) {
-		stevo.push(new Image());
-		stevo[i].onload = fileLoadCallback;
-		stevo[i].src = "assets/fightstance" + (i-2) + ".png";
+		stevo[i].src = "assets/stevo" + (i+1) + ".png";
 	}
 	units.knight.image = stevo;
-	for(var i=0;i<3;i++) {
+	for(var i=0;i<6;i++) {
 		sword.push(new Image());
 		sword[i].onload = fileLoadCallback;
 		sword[i].src = "assets/sword_position" + (i+1) + ".png";
@@ -103,7 +103,7 @@ var init = function() {
 
 loadFiles();
 
-var Knight = function(x,y) {
+var Knight = function(x, y, flipped) {
 	this.x = x;
 	this.y = y;
 	this.hp = units.knight.hp;
@@ -111,6 +111,7 @@ var Knight = function(x,y) {
 	this.dmg = units.knight.dmg;
 	this.speed = units.knight.speed;
 	this.reward = units.knight.reward;
+	this.range = tileSize * 0.75;
 	this.attackCooldown = 20;
 	this.timeToAttack = 0;
 
@@ -118,36 +119,59 @@ var Knight = function(x,y) {
 	this.weapon = units.knight.weapon;
 	this.moving = true;
 	this.attacking = false;
-	this.swordFrame = 0;
 	this.frame = 0;
 	this.frameTime = 5;
 	this.frameCnt = 0;
 	this.frames = 3;
 
-	this.attack = function(target) {
+	this.flipped = flipped || false;
+}
+Knight.prototype = {
+	getTarget: function() {
+		if(this.flipped) {
+			for(var i=0, playerCount = playerUnits.length; i < playerCount; i++) {
+				var playerAtI = playerUnits[i];
+				if(!playerAtI) continue;
+				if(playerAtI.x >= this.x - this.range && playerAtI.y == this.y) {
+					return playerAtI;
+				}
+			}
+		}
+		else {
+			for(var i=0, enemyCount = enemyUnits.length; i < enemyCount; i++) {
+				var enemyAtI = enemyUnits[i];
+				if(!enemyAtI) continue;
+				if(enemyAtI.x <= this.x + this.range && enemyAtI.y == this.y) {
+					return enemyAtI;
+				}
+			}
+		}
+		return null;
+	},
+	attack: function(target) {
 		if(this.timeToAttack == 0 && this.hp > 0 && target.attacking == false) {
 			this.timeToAttack = this.attackCooldown;
 			this.prepareNextAttack();
 			this.attacking = true;
 			setTimeout(this.strike.bind(this, target), 200);
 		}
-	}
-	this.strike = function(target) {
+	},
+	strike: function(target) {
 		if(this.hp > 0){
 			this.swordFrame = 2;
 			this.frame = 5;
 			target.hp -= this.dmg;
 			if(target.hp <= 0 && enemyUnits.indexOf(target) != -1)
 				money += target.reward;
-			setTimeout(this.prepareNextAttack.bind(this),100);
+			setTimeout(this.prepareNextAttack.bind(this),125);
 		}
-	}
-	this.prepareNextAttack = function() {
+	},
+	prepareNextAttack: function() {
 		this.frame = 4;
 		this.swordFrame = 1;
 		this.attacking = false;
-	}
-	this.die = function() {
+	},
+	die: function() {
 		var index = playerUnits.indexOf(this);
 		if(index != -1)
 			playerUnits.splice(index,1);
@@ -156,55 +180,39 @@ var Knight = function(x,y) {
 			enemyUnits.splice(index,1);
 		}
 		delete this;
-	}
-	this.draw = function() {
+	},
+	draw: function() {
 		var hpGradient = ctx.createLinearGradient(this.x-offset,this.y,this.x-offset,this.y+20);
 		hpGradient.addColorStop(0.01,"black");
 		hpGradient.addColorStop(0.5,"rgb(" + (this.maxhp-this.hp)/this.maxhp*255 + "," + this.hp/this.maxhp*255 + ",50)");
 		hpGradient.addColorStop(0.99,"black");
 		ctx.fillStyle = hpGradient;
 		if(this.hp<0) this.hp = 0;
-		if(enemyUnits.indexOf(this) != -1){
+		if(this.flipped){
 			ctx.save();
 			ctx.translate(this.x,this.y);
 			ctx.scale(-1,1);
-			ctx.translate(this.x,-this.y);
-			if(this.moving){
-				if(this.frame>=3)
-					this.frame = 1;
-				ctx.drawImage(this.weapon[0], -(this.x - offset), this.y, tileSize,tileSize);
-			}
-			else{
-				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset - tileSize/5), this.y, tileSize,tileSize);
-				else
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset), this.y, tileSize,tileSize);
-			}
-			ctx.drawImage(this.image[this.frame], -(this.x-offset), this.y, tileSize, tileSize);
-			ctx.fillRect(-(this.x - offset - tileSize/8),this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -(this.x - offset - tileSize/8), this.y, tileSize*0.75, tileSize/8);
+			ctx.translate(this.x - tileSize,-this.y);
+			var drawX = -(this.x - offset);
+			if(this.swordFrame == 6)
+				ctx.drawImage(this.weapon[this.frame], drawX + tileSize/5, this.y, tileSize,tileSize);
+			else
+				ctx.drawImage(this.weapon[this.frame], drawX, this.y, tileSize,tileSize);
+			ctx.drawImage(this.image[this.frame], drawX, this.y, tileSize, tileSize);
 			ctx.restore();
-
 		}
 		else{
-			if(this.moving){
-				if(this.frame>=3)
-					this.frame = 1;
-				ctx.drawImage(this.weapon[0], this.x - offset, this.y, tileSize,tileSize);
-			}
-			else{
-				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/5, this.y, tileSize,tileSize);
-				else
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset, this.y, tileSize,tileSize);
-			}
+			if(this.swordFrame == 6)
+				ctx.drawImage(this.weapon[this.frame], this.x - offset + tileSize/5, this.y, tileSize,tileSize);
+			else
+				ctx.drawImage(this.weapon[this.frame], this.x - offset, this.y, tileSize,tileSize);
 			ctx.drawImage(this.image[this.frame], this.x-offset, this.y, tileSize, tileSize);
-			ctx.fillRect(-offset + this.x + tileSize/8,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -offset + this.x + tileSize/8, this.y, tileSize*0.75, tileSize/8);
 		}
+		ctx.fillRect(this.x - offset + tileSize/8,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+		ctx.drawImage(hpBorder, this.x - offset + tileSize/8, this.y, tileSize*0.75, tileSize/8);
 		ctx.fillStyle = "#0f0";
-	}
-	this.update = function() {
+	},
+	update: function() {
 		if(this.timeToAttack != 0)
 			this.timeToAttack--;
 		if(this.hp<=0 || this.x >= widthT*tileSize || this.x < 0)
@@ -392,73 +400,62 @@ var scrollMap = function() {
 		offset+=scrollSpeed;
 }
 var movePlayers = function() {
-	for(var i=0;i<playerUnits.length;i++){
+	for(var i=0, playerCount = playerUnits.length, enemyCount = enemyUnits.length; i<playerCount; i++){
+		var playerAtI = playerUnits[i];
+		if(!playerAtI) continue;
 		var canMove = true;
-		var target = null;
+		var target = playerAtI.getTarget();
 		// kolizja ze swoimi
-		for(var j=0;j<playerUnits.length;j++){
-			if(i!=j && collide(playerUnits[i].x,playerUnits[i].y,playerUnits[j].x,playerUnits[j].y) && playerUnits[i].x<playerUnits[j].x){
+		for(var j=0;j<playerCount;j++){
+			if(!playerUnits[j]) continue;
+			if(i!=j && collideEntities(playerAtI, playerUnits[j]) && playerAtI.x<playerUnits[j].x){
 				canMove = false;
-				playerUnits[i].moving = false;
+				playerAtI.moving = false;
 				break;
 			}
 		}
-		// kolizja z przeciwnikami
-		for(var j=0;j<enemyUnits.length;j++){
-			if(collide(playerUnits[i].x,playerUnits[i].y,enemyUnits[j].x - tileSize,enemyUnits[j].y)){
-				canMove = false;
-				playerUnits[i].moving = false;
-				target = enemyUnits[j];
-				break;
-			}
+		if(target) {
+			canMove = false;
+			playerAtI.moving = false;
+			if(playerAtI.frame <= 3)
+				playerAtI.frame = 4;
+			playerAtI.attack(target);
 		}
 		if(canMove) {
-			playerUnits[i].x += playerUnits[i].speed;
-			playerUnits[i].moving = true;
+			playerAtI.x += playerAtI.speed;
+			playerAtI.moving = true;
 		}
-		else if(target != null) {
-			if(playerUnits[i].swordFrame == 0)
-				playerUnits[i].swordFrame = 1;
-			if(playerUnits[i].frame <= 3)
-				playerUnits[i].frame = 4;
-			playerUnits[i].attack(target);
-		}
-		playerUnits[i].update();
+		playerAtI.update();
 	}	
 }
 var moveEnemies = function() {
-	for(var i=0;i<enemyUnits.length;i++) {
+	for(var i=0, enemyCount = enemyUnits.length, playerCount = playerUnits.length; i< enemyCount; i++) {
+		var enemyAtI = enemyUnits[i];
+		if(!enemyAtI) continue;
 		var canMove = true;
-		var target = null;
+		var target = enemyAtI.getTarget();
 		// kolizja z sojusznikami
-		for(var j=0;j<enemyUnits.length;j++) {
-			if(i!=j && collide(enemyUnits[j].x,enemyUnits[j].y,enemyUnits[i].x,enemyUnits[i].y) && enemyUnits[i].x>enemyUnits[j].x){
+		for(var j=0; j < enemyCount; j++) {
+			var enemyAtJ = enemyUnits[j];
+			if(!enemyAtJ) continue;
+			if(i!=j && collideEntities(enemyAtJ,enemyAtI) && enemyAtI.x>enemyAtJ.x){
 				canMove = false;
-				enemyUnits[i].moving = false;
+				enemyAtI.moving = false;
 				break;
 			}
 		}
-		// kolizja z graczem
-		for(var j=0;j<playerUnits.length;j++){
-			if(collide(playerUnits[j].x,playerUnits[j].y,enemyUnits[i].x - tileSize,enemyUnits[i].y)){
-				canMove = false;
-				enemyUnits[i].moving = false;
-				target = playerUnits[j];
-				break;
-			}
+		if(target) {
+			canMove = false;
+			enemyAtI.moving = false;
+			if(enemyAtI.frame <= 3)
+				enemyAtI.frame = 4;
+			enemyAtI.attack(target);
 		}
 		if(canMove) {
-			enemyUnits[i].x -= enemyUnits[i].speed;
-			enemyUnits[i].moving = true;
+			enemyAtI.x -= enemyAtI.speed;
+			enemyAtI.moving = true;
 		}
-		else if(target!=null) {
-			if(enemyUnits[i].swordFrame == 0)
-				enemyUnits[i].swordFrame = 1;
-			if(enemyUnits[i].frame <= 3)
-				enemyUnits[i].frame = 4;
-			enemyUnits[i].attack(target);
-		}
-		enemyUnits[i].update();
+		enemyAtI.update();
 	}
 }
 
@@ -471,7 +468,7 @@ var update = function() {
 		while(delta>interval){
 			var spawningEnemy = Math.floor(Math.random()*500);
 			if(spawningEnemy < 5)
-				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(spawningEnemy+1)));
+				enemyUnits.push(new Knight(widthT*tileSize, tileSize*(spawningEnemy+1), true));
 			movePlayers();
 			moveEnemies();
 			updateUI();
@@ -514,10 +511,10 @@ var draw = function () {
 		}
 	}
 
-	for(var i=0;i<playerUnits.length;i++) {
+	for(var i=0, playerCount = playerUnits.length; i < playerCount; i++) {
 		playerUnits[i].draw();
 	}
-	for(var i=0;i<enemyUnits.length;i++) {
+	for(var i=0, enemiesCount=enemyUnits.length; i < enemiesCount; i++) {
 		enemyUnits[i].draw();
 	}
 

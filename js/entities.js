@@ -1,4 +1,4 @@
-var Knight = function(x,y) {
+var Knight = function(x, y, flipped) {
 	this.x = x;
 	this.y = y;
 	this.hp = units.knight.hp;
@@ -6,6 +6,7 @@ var Knight = function(x,y) {
 	this.dmg = units.knight.dmg;
 	this.speed = units.knight.speed;
 	this.reward = units.knight.reward;
+	this.range = tileSize * 0.75;
 	this.attackCooldown = 20;
 	this.timeToAttack = 0;
 
@@ -13,36 +14,59 @@ var Knight = function(x,y) {
 	this.weapon = units.knight.weapon;
 	this.moving = true;
 	this.attacking = false;
-	this.swordFrame = 0;
 	this.frame = 0;
 	this.frameTime = 5;
 	this.frameCnt = 0;
 	this.frames = 3;
 
-	this.attack = function(target) {
+	this.flipped = flipped || false;
+}
+Knight.prototype = {
+	getTarget: function() {
+		if(this.flipped) {
+			for(var i=0, playerCount = playerUnits.length; i < playerCount; i++) {
+				var playerAtI = playerUnits[i];
+				if(!playerAtI) continue;
+				if(playerAtI.x >= this.x - this.range && playerAtI.y == this.y) {
+					return playerAtI;
+				}
+			}
+		}
+		else {
+			for(var i=0, enemyCount = enemyUnits.length; i < enemyCount; i++) {
+				var enemyAtI = enemyUnits[i];
+				if(!enemyAtI) continue;
+				if(enemyAtI.x <= this.x + this.range && enemyAtI.y == this.y) {
+					return enemyAtI;
+				}
+			}
+		}
+		return null;
+	},
+	attack: function(target) {
 		if(this.timeToAttack == 0 && this.hp > 0 && target.attacking == false) {
 			this.timeToAttack = this.attackCooldown;
 			this.prepareNextAttack();
 			this.attacking = true;
 			setTimeout(this.strike.bind(this, target), 200);
 		}
-	}
-	this.strike = function(target) {
+	},
+	strike: function(target) {
 		if(this.hp > 0){
 			this.swordFrame = 2;
 			this.frame = 5;
 			target.hp -= this.dmg;
 			if(target.hp <= 0 && enemyUnits.indexOf(target) != -1)
 				money += target.reward;
-			setTimeout(this.prepareNextAttack.bind(this),100);
+			setTimeout(this.prepareNextAttack.bind(this),125);
 		}
-	}
-	this.prepareNextAttack = function() {
+	},
+	prepareNextAttack: function() {
 		this.frame = 4;
 		this.swordFrame = 1;
 		this.attacking = false;
-	}
-	this.die = function() {
+	},
+	die: function() {
 		var index = playerUnits.indexOf(this);
 		if(index != -1)
 			playerUnits.splice(index,1);
@@ -51,55 +75,39 @@ var Knight = function(x,y) {
 			enemyUnits.splice(index,1);
 		}
 		delete this;
-	}
-	this.draw = function() {
+	},
+	draw: function() {
 		var hpGradient = ctx.createLinearGradient(this.x-offset,this.y,this.x-offset,this.y+20);
 		hpGradient.addColorStop(0.01,"black");
 		hpGradient.addColorStop(0.5,"rgb(" + (this.maxhp-this.hp)/this.maxhp*255 + "," + this.hp/this.maxhp*255 + ",50)");
 		hpGradient.addColorStop(0.99,"black");
 		ctx.fillStyle = hpGradient;
 		if(this.hp<0) this.hp = 0;
-		if(enemyUnits.indexOf(this) != -1){
+		if(this.flipped){
 			ctx.save();
 			ctx.translate(this.x,this.y);
 			ctx.scale(-1,1);
-			ctx.translate(this.x,-this.y);
-			if(this.moving){
-				if(this.frame>=3)
-					this.frame = 1;
-				ctx.drawImage(this.weapon[0], -(this.x - offset), this.y, tileSize,tileSize);
-			}
-			else{
-				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset - tileSize/5), this.y, tileSize,tileSize);
-				else
-					ctx.drawImage(this.weapon[this.swordFrame], -(this.x - offset), this.y, tileSize,tileSize);
-			}
-			ctx.drawImage(this.image[this.frame], -(this.x-offset), this.y, tileSize, tileSize);
-			ctx.fillRect(-(this.x - offset - tileSize/8),this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -(this.x - offset - tileSize/8), this.y, tileSize*0.75, tileSize/8);
+			ctx.translate(this.x - tileSize,-this.y);
+			var drawX = -(this.x - offset);
+			if(this.swordFrame == 6)
+				ctx.drawImage(this.weapon[this.frame], drawX + tileSize/5, this.y, tileSize,tileSize);
+			else
+				ctx.drawImage(this.weapon[this.frame], drawX, this.y, tileSize,tileSize);
+			ctx.drawImage(this.image[this.frame], drawX, this.y, tileSize, tileSize);
 			ctx.restore();
-
 		}
 		else{
-			if(this.moving){
-				if(this.frame>=3)
-					this.frame = 1;
-				ctx.drawImage(this.weapon[0], this.x - offset, this.y, tileSize,tileSize);
-			}
-			else{
-				if(this.swordFrame == 2)
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset + tileSize/5, this.y, tileSize,tileSize);
-				else
-					ctx.drawImage(this.weapon[this.swordFrame], this.x - offset, this.y, tileSize,tileSize);
-			}
+			if(this.swordFrame == 6)
+				ctx.drawImage(this.weapon[this.frame], this.x - offset + tileSize/5, this.y, tileSize,tileSize);
+			else
+				ctx.drawImage(this.weapon[this.frame], this.x - offset, this.y, tileSize,tileSize);
 			ctx.drawImage(this.image[this.frame], this.x-offset, this.y, tileSize, tileSize);
-			ctx.fillRect(-offset + this.x + tileSize/8,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
-			ctx.drawImage(hpBorder, -offset + this.x + tileSize/8, this.y, tileSize*0.75, tileSize/8);
 		}
+		ctx.fillRect(this.x - offset + tileSize/8,this.y,this.hp/this.maxhp*(tileSize*0.75), tileSize/8);
+		ctx.drawImage(hpBorder, this.x - offset + tileSize/8, this.y, tileSize*0.75, tileSize/8);
 		ctx.fillStyle = "#0f0";
-	}
-	this.update = function() {
+	},
+	update: function() {
 		if(this.timeToAttack != 0)
 			this.timeToAttack--;
 		if(this.hp<=0 || this.x >= widthT*tileSize || this.x < 0)
