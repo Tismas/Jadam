@@ -82,9 +82,9 @@ var update = function() {
 	if(delta > interval){
 		scrollMap();
 		while(delta>interval){
-			var spawningEnemy = Math.floor(Math.random()*100);
-			if(spawningEnemy == 1)
-				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
+			var spawningEnemy = Math.floor(Math.random()*500);
+			if(spawningEnemy < 5)
+				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(spawningEnemy+1)));
 			movePlayers();
 			moveEnemies();
 			updateUI();

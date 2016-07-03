@@ -58,6 +58,7 @@ var Knight = function(x,y) {
 		hpGradient.addColorStop(0.5,"rgb(" + (this.maxhp-this.hp)/this.maxhp*255 + "," + this.hp/this.maxhp*255 + ",50)");
 		hpGradient.addColorStop(0.99,"black");
 		ctx.fillStyle = hpGradient;
+		if(this.hp<0) this.hp = 0;
 		if(enemyUnits.indexOf(this) != -1){
 			ctx.save();
 			ctx.translate(this.x,this.y);

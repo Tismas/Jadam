@@ -163,6 +163,7 @@ var Knight = function(x,y) {
 		hpGradient.addColorStop(0.5,"rgb(" + (this.maxhp-this.hp)/this.maxhp*255 + "," + this.hp/this.maxhp*255 + ",50)");
 		hpGradient.addColorStop(0.99,"black");
 		ctx.fillStyle = hpGradient;
+		if(this.hp<0) this.hp = 0;
 		if(enemyUnits.indexOf(this) != -1){
 			ctx.save();
 			ctx.translate(this.x,this.y);
@@ -468,9 +469,9 @@ var update = function() {
 	if(delta > interval){
 		scrollMap();
 		while(delta>interval){
-			var spawningEnemy = Math.floor(Math.random()*100);
-			if(spawningEnemy == 1)
-				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(Math.floor(Math.random()*5)+1)));
+			var spawningEnemy = Math.floor(Math.random()*500);
+			if(spawningEnemy < 5)
+				enemyUnits.push(new Knight(widthT*tileSize,tileSize*(spawningEnemy+1)));
 			movePlayers();
 			moveEnemies();
 			updateUI();
