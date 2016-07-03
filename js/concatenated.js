@@ -1,36 +1,36 @@
 (function(){
-var units = {};	// JSON's
-var stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()], boss = [];
-var totalFiles 	= 16;
+var units = {},
+stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()], boss = [],
+totalFiles 	= 22,
 
-var filesLoaded = 0;
-var game 		=	document.getElementById('game');
-var canvas 		= 	document.createElement('canvas');
-var ctx 		= 	canvas.getContext('2d');
-var imageCount	=	0;
-var heightT 	= 	6;	// rows+1
-var widthT		=	30;
-var width 		= 	window.innerWidth;
-var height 		= 	window.innerHeight;
-var offset		=	0;
-var interval    = 	1000/30;
-var tileSize    =  	Math.floor(height/heightT);
-var mouseX		=	0;
-var mouseY		=	0;
+filesLoaded = 0;
+game 		=	document.getElementById('game'),
+canvas 		= 	document.createElement('canvas'),
+ctx 		= 	canvas.getContext('2d'),
+imageCount	=	0,
+heightT 	= 	6,	// rows+1
+widthT		=	30,
+width 		= 	window.innerWidth,
+height 		= 	window.innerHeight,
+offset		=	0,
+interval    = 	1000/30,
+tileSize    =  	Math.floor(height/heightT),
+mouseX		=	0,
+mouseY		=	0,
 
-var activeRow	=	1;
-var scrollSpeed =	15;
-var now			=	new Date();
-var before		=	new Date();
+activeRow	=	1,
+scrollSpeed =	15,
+now			=	new Date(),
+before		=	new Date(),
 
-var money		=	1000;
-var isAnvilClicked	=	0;
-var anvilX		=	0;
-var playerUnits =	[];
-var enemyUnits	=	[];
-var unitButtons =	[];
-var particles	=	[];
-var bossHp		=	100;
+money		=	1000,
+isAnvilClicked	=	0,
+anvilX		=	0,
+playerUnits =	[],
+enemyUnits	=	[],
+unitButtons =	[],
+particles	=	[],
+bossHp		=	100;
 
 var collide = function(x1,y1,x2,y2) {
 	if(x2 < x1 + tileSize && x2 > x1 && y2 < y1 + tileSize && y2 >= y1)
@@ -106,12 +106,14 @@ loadFiles();
 var Knight = function(x, y, flipped) {
 	this.x = x;
 	this.y = y;
+	this.tileY = y/tileSize;
 	this.hp = units.knight.hp;
 	this.maxhp = units.knight.hp;
 	this.dmg = units.knight.dmg;
-	this.speed = units.knight.speed;
+	this.speed = 0.04;
 	this.reward = units.knight.reward;
-	this.range = tileSize * 0.75;
+	this.rangeAspect = 0.75;
+	this.range = tileSize * this.rangeAspect;
 	this.attackCooldown = 20;
 	this.timeToAttack = 0;
 
@@ -213,6 +215,57 @@ Knight.prototype = {
 		ctx.fillStyle = "#0f0";
 	},
 	update: function() {
+		var canMove = true;
+		var target = this.getTarget();
+		var entityAtJ;
+
+		if(this.flipped){
+			for(var j=0, enemyCount = enemyUnits.length; j < enemyCount; j++) {
+				entityAtJ = enemyUnits[j];
+				if(!entityAtJ) continue;
+				if(this !== entityAtJ && collideEntities(entityAtJ,this) && this.x>entityAtJ.x){
+					canMove = false;
+					this.moving = false;
+					break;
+				}
+			}
+			if(target) {
+				canMove = false;
+				this.moving = false;
+				if(this.frame <= 3)
+					this.frame = 4;
+				this.attack(target);
+			}
+			if(canMove) {
+				this.x -= this.speed * tileSize;
+				this.moving = true;
+			}
+		}
+		else{
+			for(var j=0, playerCount = playerUnits.length; j<playerCount; j++) {
+				entityAtJ = playerUnits[j];
+				if(!entityAtJ) continue;
+				if(this!==entityAtJ && collideEntities(this, entityAtJ) && this.x<entityAtJ.x){
+					canMove = false;
+					this.moving = false;
+					break;
+				}
+			}
+			if(target) {
+				canMove = false;
+				this.moving = false;
+				if(this.frame <= 3)
+					this.frame = 4;
+				this.attack(target);
+			}
+			if(canMove) {
+				this.x += this.speed * tileSize;
+				this.moving = true;
+			}
+		}
+		this.updateAnimation();
+	},
+	updateAnimation: function() {
 		if(this.timeToAttack != 0)
 			this.timeToAttack--;
 		if(this.hp<=0 || this.x >= widthT*tileSize || this.x < 0)
@@ -243,18 +296,21 @@ var resizeCallback = function() {
 	canvas.width = width;
 	canvas.height = height;
 	tileSize = Math.floor(height/heightT);
-	for(var i=0;i<unitButtons.length;i++) {
+	for(var i=0, buttonsCount = unitButtons.length; i < buttonsCount; i++) {
 		unitButtons[i].x = i*tileSize;
 	}
-	for(var i=0;i<playerUnits.length;i++){
+	for(var i=0, playerCount = playerUnits.length; i < playerCount; i++) {
+		if(!playerUnits[i]) continue;
 		playerUnits[i].x *= aspectRatioX;
-		playerUnits[i].y *= aspectRatioY;
+		playerUnits[i].y = playerUnits[i].tileY * tileSize;
+		playerUnits[i].range = playerUnits[i].rangeAspect * tileSize;
 	}
-	for(var i=0;i<enemyUnits.length;i++){
+	for(var i=0, enemyCount = enemyUnits.length; i < enemyCount; i++) {
+		if(!enemyUnits[i]) continue;
 		enemyUnits[i].x *= aspectRatioX;
-		enemyUnits[i].y *= aspectRatioY;
+		enemyUnits[i].y = enemyUnits[i].tileY * tileSize;
+		enemyUnits[i].range = enemyUnits[i].rangeAspect * tileSize;
 	}
-	offset *= aspectRatioX;
 	if(offset>widthT*tileSize-width) offset = widthT*tileSize-width;
 	update();
 	draw();
@@ -400,68 +456,22 @@ var scrollMap = function() {
 		offset+=scrollSpeed;
 }
 var movePlayers = function() {
-	for(var i=0, playerCount = playerUnits.length, enemyCount = enemyUnits.length; i<playerCount; i++){
-		var playerAtI = playerUnits[i];
-		if(!playerAtI) continue;
-		var canMove = true;
-		var target = playerAtI.getTarget();
-		// kolizja ze swoimi
-		for(var j=0;j<playerCount;j++){
-			if(!playerUnits[j]) continue;
-			if(i!=j && collideEntities(playerAtI, playerUnits[j]) && playerAtI.x<playerUnits[j].x){
-				canMove = false;
-				playerAtI.moving = false;
-				break;
-			}
-		}
-		if(target) {
-			canMove = false;
-			playerAtI.moving = false;
-			if(playerAtI.frame <= 3)
-				playerAtI.frame = 4;
-			playerAtI.attack(target);
-		}
-		if(canMove) {
-			playerAtI.x += playerAtI.speed;
-			playerAtI.moving = true;
-		}
-		playerAtI.update();
+	var playerAtI;
+	for(var i=0, playerCount = playerUnits.length; i<playerCount; i++){
+		playerAtI = playerUnits[i];
+		if(playerAtI) playerAtI.update();
 	}	
 }
 var moveEnemies = function() {
-	for(var i=0, enemyCount = enemyUnits.length, playerCount = playerUnits.length; i< enemyCount; i++) {
-		var enemyAtI = enemyUnits[i];
-		if(!enemyAtI) continue;
-		var canMove = true;
-		var target = enemyAtI.getTarget();
-		// kolizja z sojusznikami
-		for(var j=0; j < enemyCount; j++) {
-			var enemyAtJ = enemyUnits[j];
-			if(!enemyAtJ) continue;
-			if(i!=j && collideEntities(enemyAtJ,enemyAtI) && enemyAtI.x>enemyAtJ.x){
-				canMove = false;
-				enemyAtI.moving = false;
-				break;
-			}
-		}
-		if(target) {
-			canMove = false;
-			enemyAtI.moving = false;
-			if(enemyAtI.frame <= 3)
-				enemyAtI.frame = 4;
-			enemyAtI.attack(target);
-		}
-		if(canMove) {
-			enemyAtI.x -= enemyAtI.speed;
-			enemyAtI.moving = true;
-		}
-		enemyAtI.update();
+	var enemyAtI;
+	for(var i=0, enemyCount = enemyUnits.length; i< enemyCount; i++) {
+		enemyAtI = enemyUnits[i];
+		if(enemyAtI) enemyAtI.update();
 	}
 }
 
 var update = function() {
 	now = new Date();
-
 	var delta = now - before;
 	if(delta > interval){
 		scrollMap();
@@ -476,7 +486,6 @@ var update = function() {
 		}
 		before = now;
 	}
-
 	requestAnimationFrame(draw);
 }
 

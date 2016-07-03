@@ -11,18 +11,21 @@ var resizeCallback = function() {
 	canvas.width = width;
 	canvas.height = height;
 	tileSize = Math.floor(height/heightT);
-	for(var i=0;i<unitButtons.length;i++) {
+	for(var i=0, buttonsCount = unitButtons.length; i < buttonsCount; i++) {
 		unitButtons[i].x = i*tileSize;
 	}
-	for(var i=0;i<playerUnits.length;i++){
+	for(var i=0, playerCount = playerUnits.length; i < playerCount; i++) {
+		if(!playerUnits[i]) continue;
 		playerUnits[i].x *= aspectRatioX;
-		playerUnits[i].y *= aspectRatioY;
+		playerUnits[i].y = playerUnits[i].tileY * tileSize;
+		playerUnits[i].range = playerUnits[i].rangeAspect * tileSize;
 	}
-	for(var i=0;i<enemyUnits.length;i++){
+	for(var i=0, enemyCount = enemyUnits.length; i < enemyCount; i++) {
+		if(!enemyUnits[i]) continue;
 		enemyUnits[i].x *= aspectRatioX;
-		enemyUnits[i].y *= aspectRatioY;
+		enemyUnits[i].y = enemyUnits[i].tileY * tileSize;
+		enemyUnits[i].range = enemyUnits[i].rangeAspect * tileSize;
 	}
-	offset *= aspectRatioX;
 	if(offset>widthT*tileSize-width) offset = widthT*tileSize-width;
 	update();
 	draw();

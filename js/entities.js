@@ -1,12 +1,14 @@
 var Knight = function(x, y, flipped) {
 	this.x = x;
 	this.y = y;
+	this.tileY = y/tileSize;
 	this.hp = units.knight.hp;
 	this.maxhp = units.knight.hp;
 	this.dmg = units.knight.dmg;
-	this.speed = units.knight.speed;
+	this.speed = 0.04;
 	this.reward = units.knight.reward;
-	this.range = tileSize * 0.75;
+	this.rangeAspect = 0.75;
+	this.range = tileSize * this.rangeAspect;
 	this.attackCooldown = 20;
 	this.timeToAttack = 0;
 
@@ -108,6 +110,57 @@ Knight.prototype = {
 		ctx.fillStyle = "#0f0";
 	},
 	update: function() {
+		var canMove = true;
+		var target = this.getTarget();
+		var entityAtJ;
+
+		if(this.flipped){
+			for(var j=0, enemyCount = enemyUnits.length; j < enemyCount; j++) {
+				entityAtJ = enemyUnits[j];
+				if(!entityAtJ) continue;
+				if(this !== entityAtJ && collideEntities(entityAtJ,this) && this.x>entityAtJ.x){
+					canMove = false;
+					this.moving = false;
+					break;
+				}
+			}
+			if(target) {
+				canMove = false;
+				this.moving = false;
+				if(this.frame <= 3)
+					this.frame = 4;
+				this.attack(target);
+			}
+			if(canMove) {
+				this.x -= this.speed * tileSize;
+				this.moving = true;
+			}
+		}
+		else{
+			for(var j=0, playerCount = playerUnits.length; j<playerCount; j++) {
+				entityAtJ = playerUnits[j];
+				if(!entityAtJ) continue;
+				if(this!==entityAtJ && collideEntities(this, entityAtJ) && this.x<entityAtJ.x){
+					canMove = false;
+					this.moving = false;
+					break;
+				}
+			}
+			if(target) {
+				canMove = false;
+				this.moving = false;
+				if(this.frame <= 3)
+					this.frame = 4;
+				this.attack(target);
+			}
+			if(canMove) {
+				this.x += this.speed * tileSize;
+				this.moving = true;
+			}
+		}
+		this.updateAnimation();
+	},
+	updateAnimation: function() {
 		if(this.timeToAttack != 0)
 			this.timeToAttack--;
 		if(this.hp<=0 || this.x >= widthT*tileSize || this.x < 0)

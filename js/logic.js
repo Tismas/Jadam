@@ -5,68 +5,22 @@ var scrollMap = function() {
 		offset+=scrollSpeed;
 }
 var movePlayers = function() {
-	for(var i=0, playerCount = playerUnits.length, enemyCount = enemyUnits.length; i<playerCount; i++){
-		var playerAtI = playerUnits[i];
-		if(!playerAtI) continue;
-		var canMove = true;
-		var target = playerAtI.getTarget();
-		// kolizja ze swoimi
-		for(var j=0;j<playerCount;j++){
-			if(!playerUnits[j]) continue;
-			if(i!=j && collideEntities(playerAtI, playerUnits[j]) && playerAtI.x<playerUnits[j].x){
-				canMove = false;
-				playerAtI.moving = false;
-				break;
-			}
-		}
-		if(target) {
-			canMove = false;
-			playerAtI.moving = false;
-			if(playerAtI.frame <= 3)
-				playerAtI.frame = 4;
-			playerAtI.attack(target);
-		}
-		if(canMove) {
-			playerAtI.x += playerAtI.speed;
-			playerAtI.moving = true;
-		}
-		playerAtI.update();
+	var playerAtI;
+	for(var i=0, playerCount = playerUnits.length; i<playerCount; i++){
+		playerAtI = playerUnits[i];
+		if(playerAtI) playerAtI.update();
 	}	
 }
 var moveEnemies = function() {
-	for(var i=0, enemyCount = enemyUnits.length, playerCount = playerUnits.length; i< enemyCount; i++) {
-		var enemyAtI = enemyUnits[i];
-		if(!enemyAtI) continue;
-		var canMove = true;
-		var target = enemyAtI.getTarget();
-		// kolizja z sojusznikami
-		for(var j=0; j < enemyCount; j++) {
-			var enemyAtJ = enemyUnits[j];
-			if(!enemyAtJ) continue;
-			if(i!=j && collideEntities(enemyAtJ,enemyAtI) && enemyAtI.x>enemyAtJ.x){
-				canMove = false;
-				enemyAtI.moving = false;
-				break;
-			}
-		}
-		if(target) {
-			canMove = false;
-			enemyAtI.moving = false;
-			if(enemyAtI.frame <= 3)
-				enemyAtI.frame = 4;
-			enemyAtI.attack(target);
-		}
-		if(canMove) {
-			enemyAtI.x -= enemyAtI.speed;
-			enemyAtI.moving = true;
-		}
-		enemyAtI.update();
+	var enemyAtI;
+	for(var i=0, enemyCount = enemyUnits.length; i< enemyCount; i++) {
+		enemyAtI = enemyUnits[i];
+		if(enemyAtI) enemyAtI.update();
 	}
 }
 
 var update = function() {
 	now = new Date();
-
 	var delta = now - before;
 	if(delta > interval){
 		scrollMap();
@@ -81,7 +35,6 @@ var update = function() {
 		}
 		before = now;
 	}
-
 	requestAnimationFrame(draw);
 }
 
