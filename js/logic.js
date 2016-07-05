@@ -1,7 +1,7 @@
 var scrollMap = function() {
-	if(mouseX <= tileSize && offset > 0)
+	if(mouseX <= gameOffsetX + scaledTileSize && offset > 0 && mouseX >= gameOffsetX)
 		offset-=scrollSpeed;
-	else if(mouseX >= width - tileSize && offset < widthT*tileSize-width)
+	else if(mouseX >= width - scaledTileSize - gameOffsetX && offset < (widthT+heightT)*tileSize-frameWidth && mouseX <= width - gameOffsetX)
 		offset+=scrollSpeed;
 }
 var movePlayers = function() {
@@ -26,7 +26,7 @@ var update = function() {
 		scrollMap();
 		while(delta>interval){
 			var spawningEnemy = Math.floor(Math.random()*500);
-			if(spawningEnemy < 5)
+			if(spawningEnemy < heightT - 1)
 				enemyUnits.push(new Knight(widthT*tileSize, tileSize*(spawningEnemy+1), true));
 			movePlayers();
 			moveEnemies();
@@ -39,33 +39,33 @@ var update = function() {
 }
 
 var draw = function () {
-	ctx.fillStyle = '#000';
-	ctx.fillRect(0,0,canvas.width,canvas.height);
+	c.fillStyle = '#000';
+	c.fillRect(0,0,frame.width,frame.height);
 
 	// draw background
-	var firstTile = Math.floor(offset/tileSize);
-	var widthScreenTiles = Math.floor(width/tileSize);
-	for(var i= firstTile; i <= firstTile + widthScreenTiles + 1; i++) {
-		for(var j=0;j<heightT;j++) {
-			ctx.drawImage(bg, i*tileSize-offset, j*tileSize, tileSize, tileSize);
+	var firstTile = Math.floor(offset/tileSize),
+		widthScreenTiles = Math.floor(frameWidth/tileSize);
+	for(var i = firstTile; i <= firstTile + widthScreenTiles + 1; i++) {
+		for(var j = 0;j<heightT;j++) {
+			c.drawImage(bg, i*tileSize-offset, j*tileSize, tileSize, tileSize);
 		}
 	}
 	
 	// draw foreground
-	var selected = ctx.createLinearGradient(-offset-tileSize/8,0,tileSize,0);
+	var selected = c.createLinearGradient(-offset-tileSize/8,0,tileSize,0);
 		selected.addColorStop(0,"yellow");
 		selected.addColorStop(0.5,"transparent");
-	var highlighted = ctx.createLinearGradient(-offset-tileSize/8,0,tileSize,0);
+	var highlighted = c.createLinearGradient(-offset-tileSize/8,0,tileSize,0);
 		highlighted.addColorStop(0,"blue");
 		highlighted.addColorStop(0.5,"transparent");
 
-	ctx.fillStyle = selected;
-	ctx.fillRect(-offset,tileSize*activeRow,tileSize,tileSize);
-	if(mouseX<=tileSize && mouseY>=tileSize) {
-		var hl = Math.floor(mouseY/tileSize);
+	c.fillStyle = selected;
+	c.fillRect(-offset,tileSize*activeRow,tileSize,tileSize);
+	if(mouseX <= scaledTileSize + gameOffsetX && mouseY >= scaledTileSize && mouseX >= gameOffsetX) {
+		var hl = Math.floor(mouseY/scaledTileSize);
 		if(hl<heightT && hl!=activeRow) {
-			ctx.fillStyle = highlighted;
-			ctx.fillRect(-offset,hl*tileSize,tileSize,tileSize);
+			c.fillStyle = highlighted;
+			c.fillRect(-offset,hl*tileSize,tileSize,tileSize);
 		}
 	}
 
@@ -75,8 +75,13 @@ var draw = function () {
 	for(var i=0, enemiesCount=enemyUnits.length; i < enemiesCount; i++) {
 		enemyUnits[i].draw();
 	}
+	boss.draw();
 
 	drawUI();
+
+	ctx.fillStyle = "#000";
+	ctx.fillRect(0,0,width,height);
+	ctx.drawImage(frame,gameOffsetX,gameOffsetY,gameWidth,gameHeight);
 
 	setTimeout(update,interval);
 }

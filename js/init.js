@@ -35,10 +35,10 @@ var loadImages = function() {
 	coin.onload = fileLoadCallback;
 	coin.src = "assets/moneta1.png";
 	
-	for(var i=0;i<4;i++){
-		boss.push(new Image());
-		boss[i].onload = fileLoadCallback;
-		boss[i].src = "assets/boss" + (i+1) + ".png";
+	for(var i=0;i<5;i++){
+		boss.img.push(new Image());
+		boss.img[i].onload = fileLoadCallback;
+		boss.img[i].src = "assets/boss" + (i+1) + ".png";
 	}
 	
 	init();
@@ -47,6 +47,10 @@ var loadImages = function() {
 var init = function() {
 	canvas.width  = width;
 	canvas.height = height;
+	frame.width = frameWidth;
+	frame.height = frameHeight;
+	setGameSize();
+
 	game.appendChild(canvas);
 
 	unitButtons.push(new UnitButton(tileSize*0,0,units.knight,Knight));

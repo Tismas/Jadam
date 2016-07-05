@@ -3,6 +3,7 @@
 		"hp": 10,
 		"dmg": 4,
 		"speed": 5,
+		"range": 150,
 		"price": 20,
 		"color": "#0f0",
 		"reward": 30
