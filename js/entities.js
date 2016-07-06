@@ -40,6 +40,8 @@ Knight.prototype = {
 					return enemyAtI;
 				}
 			}
+			if(boss.x <= this.x + this.range)
+				return boss;
 		}
 		return null;
 	},
@@ -53,11 +55,12 @@ Knight.prototype = {
 	},
 	strike: function(target) {
 		if(this.hp > 0){
-			this.swordFrame = 2;
 			this.frame = 5;
 			target.hp -= this.dmg;
-			if(target.hp <= 0 && enemyUnits.indexOf(target) != -1)
+			if(target.hp <= 0 && (enemyUnits.indexOf(target) != -1 || target == boss))
 				money += target.reward;
+			var halfOfWidth = target.width/2 || tileSize/2, halfOfHeight = target.height/2 || tileSize/2;
+			particles.push(new DamageDisplay(target.x+halfOfWidth,target.y+halfOfHeight,this.dmg));
 			setTimeout(this.prepareNextAttack.bind(this),125);
 		}
 	},
@@ -152,7 +155,7 @@ Knight.prototype = {
 		}
 		this.updateAnimation();
 		
-		if(this.hp <= 0 || this.x > widthT*tileSize || this.x < 0)
+		if(this.hp <= 0 || this.x < 0)
 			this.die();
 	},
 	updateAnimation: function() {

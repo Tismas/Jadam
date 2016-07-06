@@ -15,7 +15,6 @@ canvas.onmousemove = function(e) {
 	mouseX = e.x;
 	mouseY = e.y;
 }
-var unclickAnvil = function() { isAnvilClicked = 0; }
 canvas.onclick = function(e) {
 	if(e.x <= gameOffsetX + scaledTileSize && e.y >= gameOffsetY + scaledTileSize) {
 		activeRow = Math.floor(mouseY/scaledTileSize);
@@ -27,10 +26,23 @@ canvas.onclick = function(e) {
 		else if(unitButtons[i].collide(e.x,e.y))
 			unitButtons[i].fail();
 	}
-	// if(e.x >= anvilX && e.x <= anvilX + tileSize && e.y >= 0 && e.y <= tileSize){
-	// 	isAnvilClicked = 1;
-	// 	money++;
-	// 	particles.push(new One(anvilX + tileSize/3 + (-tileSize/8 + Math.random()*(tileSize/4)), tileSize/2));
-	// 	setTimeout(unclickAnvil,125);
-	// }
+	if(collidePoint({x:e.x,y:e.y},anvil)){
+		anvil.onclick();
+	}
+}
+window.onkeydown = function(e) {
+	if(e.keyCode == 37) {
+		keys.left = true;
+	}
+	else if(e.keyCode == 39) {
+		keys.right = true;
+	}
+}
+window.onkeyup = function(e) {
+	if(e.keyCode == 37) {
+		keys.left = false;
+	}
+	else if(e.keyCode == 39) {
+		keys.right = false;
+	}
 }

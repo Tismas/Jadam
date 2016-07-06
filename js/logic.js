@@ -1,7 +1,7 @@
 var scrollMap = function() {
-	if(mouseX <= gameOffsetX + scaledTileSize && offset > 0 && mouseX >= gameOffsetX)
+	if((mouseX <= gameOffsetX + scaledTileSize || keys.left) && offset > 0 && mouseX >= gameOffsetX)
 		offset-=scrollSpeed;
-	else if(mouseX >= width - scaledTileSize - gameOffsetX && offset < (widthT+heightT)*tileSize-frameWidth && mouseX <= width - gameOffsetX)
+	else if((mouseX >= width - scaledTileSize - gameOffsetX || keys.right) && offset < (widthT+heightT)*tileSize-frameWidth && mouseX <= width - gameOffsetX)
 		offset+=scrollSpeed;
 }
 var movePlayers = function() {
@@ -30,6 +30,7 @@ var update = function() {
 				enemyUnits.push(new Knight(widthT*tileSize, tileSize*(spawningEnemy+1), true));
 			movePlayers();
 			moveEnemies();
+			boss.update();
 			updateUI();
 			delta -= interval;
 		}

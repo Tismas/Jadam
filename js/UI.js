@@ -1,14 +1,36 @@
 
-var One = function(x,y){
+var One = function(x,y) {
 	this.x = x;
 	this.y = y;
-	this.draw = function() {
+}
+One.prototype = {
+	draw: function() {
 		c.fillStyle = "rgba(255,255,255," + this.y / y + ")";
 		c.fillText("+1",this.x,this.y);
-	}
-	this.update = function() {
+	},
+	update: function() {
 		this.y--;
 		if(this.y <= 0){
+			particles.splice(particles.indexOf(this),1);
+			delete this;
+		}
+	}
+}
+
+var DamageDisplay = function(x,y,value) {
+	this.x = x;
+	this.y = y;
+	this.dist = 0;
+	this.value = value;
+}
+DamageDisplay.prototype = {
+	draw: function() {
+		c.fillStyle = "rgba(255,50,50," + this.dist/1 + ")";
+		c.fillText("-" + this.value,this.x-offset,this.y-this.dist);
+	},
+	update: function() {
+		this.dist+=3;
+		if(this.dist >= tileSize/4){
 			particles.splice(particles.indexOf(this),1);
 			delete this;
 		}
@@ -98,22 +120,19 @@ var updateUI = function() {
 var drawUI = function() {
 	c.fillStyle = "#000";
 	c.fillRect(0,0,tileSize*widthT,tileSize);
-	for(var i=0;i<unitButtons.length;i++){
+	for(var i=0;i<unitButtons.length;i++)
 		unitButtons[i].draw();
-	}
+
 	c.font = "20px Arial";
 	c.fillStyle = "#fff"
-	var middle = Math.round((frameWidth/2)/tileSize) - 1;
-	c.drawImage(coin, tileSize*middle + 10, tileSize/6, tileSize/5,tileSize/5);
-	c.fillText(money, tileSize*middle + tileSize/5 + 10, tileSize/6+20);
+	c.drawImage(coin, tileSize*4 + 10, tileSize/6, tileSize/5,tileSize/5);
+	c.fillText(money, tileSize*4 + tileSize/5 + 10, tileSize/6+20);
+	c.fillText("Level: " + level, tileSize*4 + tileSize/5 + 10, tileSize/6+60);
 
-	//anvil
-	anvilX = tileSize*(middle+1);
-	c.drawImage(anvil[isAnvilClicked], anvilX, 0, tileSize, tileSize);
+	anvil.draw();
 
-	for(var i=0;i<particles.length;i++){
+	for(var i=0;i<particles.length;i++)
 		particles[i].draw();
-	}
 
 	drawBorder();
 }

@@ -26,10 +26,11 @@ var loadImages = function() {
 		sword[i].src = "assets/sword_position" + (i+1) + ".png";
 	}
 	units.knight.weapon = sword;
-	anvil[0].onload = fileLoadCallback;
-	anvil[0].src = "assets/anvil.png";
-	anvil[1].onload = fileLoadCallback;
-	anvil[1].src = "assets/anvil2.png";
+	for(var i=0;i<2;i++){
+		anvil.img.push(new Image());
+		anvil.img[i].onload = fileLoadCallback;
+		anvil.img[i].src = "assets/anvil" + (i+1) + ".png";
+	}
 	hpBorder.onload = fileLoadCallback;
 	hpBorder.src = "assets/hp.png";
 	coin.onload = fileLoadCallback;

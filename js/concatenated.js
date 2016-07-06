@@ -1,9 +1,13 @@
 (function(){
-var units = {},
-stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(), anvil = [new Image(), new Image()],
-totalFiles 	= 22,
+var units 	= {},
+stevo = [], sword = [], bg = new Image(), hpBorder = new Image(), coin = new Image(),
+totalFiles 	= 	23,
+keys 		=	{
+	left: false,
+	right: false,
+},
 
-filesLoaded = 0;
+filesLoaded = 	0;
 game 		=	document.getElementById('game'),
 canvas 		= 	document.createElement('canvas'),
 frame		=	document.createElement('canvas'),
@@ -33,25 +37,59 @@ scrollSpeed =	15,
 now			=	new Date(),
 before		=	new Date(),
 
+level		=	1,
 money		=	1000,
-isAnvilClicked	=	0,
 playerUnits =	[],
 enemyUnits	=	[],
 unitButtons =	[],
 particles	=	[],
+anvil 		=	{
+	x: tileSize*5,
+	y: 0,
+	frame: 0,
+	img: [],
+
+	onclick: function() {
+		if(this.frame == 0)
+			setTimeout(this.unclick.bind(this), 100);
+		money++;
+		particles.push(new One(this.x + tileSize/8 + Math.random()*(tileSize/2), tileSize/2));
+		this.frame = 1;
+	},
+	unclick: function() {
+		this.frame = 0;
+	},
+	draw: function() {
+		c.drawImage(this.img[this.frame],this.x,this.y,tileSize,tileSize);
+	},
+},
 boss		=	{
 	x: widthT*tileSize,
 	y: tileSize,
+	width: (heightT-1) * tileSize,
+	height: (heightT-1) * tileSize,
 	hp: 100,
 	maxhp: 100,
 	img: [],
 	frame: 0,
+	reward: 1000,
+	attacking: false,
 
 	draw: function() {
 		if(boss.frame > 4) boss.frame = 0;
-		c.drawImage(this.img[this.frame], this.x - offset, this.y, (heightT-1) * tileSize, (heightT-1) * tileSize);
-		drawHpBar(this, (heightT-1) * tileSize);
+		c.drawImage(this.img[this.frame], this.x - offset, this.y, this.width, this.height);
+		drawHpBar(this, this.width);
 	},
+	update: function() {
+		if(this.hp <= 0) {
+			level++;
+			widthT += 10;
+			this.hp = this.maxhp = Math.round(this.maxhp * Math.pow(Math.log(level+1),0.75));
+			this.reward = Math.round(this.reward * Math.pow(Math.log(level+1),0.75));
+			console.log(this.maxhp,this.hp);
+			this.x = widthT*tileSize;
+		}
+	}
 };
 setInterval(function(){boss.frame++;},200);
 
@@ -59,7 +97,7 @@ var drawHpBar = function(entity, w) {
 	var hpGradient = c.createLinearGradient(entity.x-offset,entity.y,entity.x-offset,entity.y+20),
 		barWidth = w || tileSize;
 	hpGradient.addColorStop(0.01,"black");
-	hpGradient.addColorStop(0.5,"rgb(" + (entity.maxhp-entity.hp)/entity.maxhp*255 + "," + entity.hp/entity.maxhp*255 + ",50)");
+	hpGradient.addColorStop(0.5,"rgb(" + Math.round((entity.maxhp-entity.hp)/entity.maxhp*255) + "," + Math.round(entity.hp/entity.maxhp*255) + ",50)");
 	hpGradient.addColorStop(0.99,"black");
 	c.fillStyle = hpGradient;
 	c.fillRect(entity.x - offset + barWidth/8, entity.y, entity.hp/entity.maxhp*(barWidth*0.75), tileSize/8);
@@ -86,6 +124,8 @@ var setGameSize = function() {
 }
 
 var collidePoint = function(point,rect) {
+	rect.width = rect.width || tileSize;
+	rect.height = rect.height || tileSize;
 	if(point.x > rect.x && point.x < rect.x + rect.width && point.y > rect.y & point.y < rect.y + rect.height)
 		return true;
 	return false;
@@ -96,7 +136,7 @@ var collideEntities = function(rect1, rect2) {
 	rect2.width = rect1.width || tileSize;
 	rect2.height = rect1.height || tileSize;
 	if(((rect1.x + rect1.width > rect2.x && rect1.x + rect1.width < rect2.x + rect2.width) || (rect2.x + rect2.width > rect1.x && rect2.x + rect2.width < rect1.x + rect1.width))
-		&& ((rect1.y + rect1.height > rect2.y && rect1.y + rect1.height < rect2.y + rect2.height) || (rect2.y + rect2.height > rect1.y && rect2.y + rect2.height < rect1.y + rect1.height)))
+		&& ((rect1.y + rect1.height > rect2.y && rect1.y + rect1.height <= rect2.y + rect2.height) || (rect2.y + rect2.height > rect1.y && rect2.y + rect2.height <= rect1.y + rect1.height)))
 		return true;
 	return false;
 }
@@ -129,10 +169,11 @@ var loadImages = function() {
 		sword[i].src = "assets/sword_position" + (i+1) + ".png";
 	}
 	units.knight.weapon = sword;
-	anvil[0].onload = fileLoadCallback;
-	anvil[0].src = "assets/anvil.png";
-	anvil[1].onload = fileLoadCallback;
-	anvil[1].src = "assets/anvil2.png";
+	for(var i=0;i<2;i++){
+		anvil.img.push(new Image());
+		anvil.img[i].onload = fileLoadCallback;
+		anvil.img[i].src = "assets/anvil" + (i+1) + ".png";
+	}
 	hpBorder.onload = fileLoadCallback;
 	hpBorder.src = "assets/hp.png";
 	coin.onload = fileLoadCallback;
@@ -207,6 +248,8 @@ Knight.prototype = {
 					return enemyAtI;
 				}
 			}
+			if(boss.x <= this.x + this.range)
+				return boss;
 		}
 		return null;
 	},
@@ -220,11 +263,12 @@ Knight.prototype = {
 	},
 	strike: function(target) {
 		if(this.hp > 0){
-			this.swordFrame = 2;
 			this.frame = 5;
 			target.hp -= this.dmg;
-			if(target.hp <= 0 && enemyUnits.indexOf(target) != -1)
+			if(target.hp <= 0 && (enemyUnits.indexOf(target) != -1 || target == boss))
 				money += target.reward;
+			var halfOfWidth = target.width/2 || tileSize/2, halfOfHeight = target.height/2 || tileSize/2;
+			particles.push(new DamageDisplay(target.x+halfOfWidth,target.y+halfOfHeight,this.dmg));
 			setTimeout(this.prepareNextAttack.bind(this),125);
 		}
 	},
@@ -319,7 +363,7 @@ Knight.prototype = {
 		}
 		this.updateAnimation();
 		
-		if(this.hp <= 0 || this.x > widthT*tileSize || this.x < 0)
+		if(this.hp <= 0 || this.x < 0)
 			this.die();
 	},
 	updateAnimation: function() {
@@ -355,7 +399,6 @@ canvas.onmousemove = function(e) {
 	mouseX = e.x;
 	mouseY = e.y;
 }
-var unclickAnvil = function() { isAnvilClicked = 0; }
 canvas.onclick = function(e) {
 	if(e.x <= gameOffsetX + scaledTileSize && e.y >= gameOffsetY + scaledTileSize) {
 		activeRow = Math.floor(mouseY/scaledTileSize);
@@ -367,26 +410,60 @@ canvas.onclick = function(e) {
 		else if(unitButtons[i].collide(e.x,e.y))
 			unitButtons[i].fail();
 	}
-	// if(e.x >= anvilX && e.x <= anvilX + tileSize && e.y >= 0 && e.y <= tileSize){
-	// 	isAnvilClicked = 1;
-	// 	money++;
-	// 	particles.push(new One(anvilX + tileSize/3 + (-tileSize/8 + Math.random()*(tileSize/4)), tileSize/2));
-	// 	setTimeout(unclickAnvil,125);
-	// }
+	if(collidePoint({x:e.x,y:e.y},anvil)){
+		anvil.onclick();
+	}
+}
+window.onkeydown = function(e) {
+	if(e.keyCode == 37) {
+		keys.left = true;
+	}
+	else if(e.keyCode == 39) {
+		keys.right = true;
+	}
+}
+window.onkeyup = function(e) {
+	if(e.keyCode == 37) {
+		keys.left = false;
+	}
+	else if(e.keyCode == 39) {
+		keys.right = false;
+	}
 }
 
 
-
-var One = function(x,y){
+var One = function(x,y) {
 	this.x = x;
 	this.y = y;
-	this.draw = function() {
+}
+One.prototype = {
+	draw: function() {
 		c.fillStyle = "rgba(255,255,255," + this.y / y + ")";
 		c.fillText("+1",this.x,this.y);
-	}
-	this.update = function() {
+	},
+	update: function() {
 		this.y--;
 		if(this.y <= 0){
+			particles.splice(particles.indexOf(this),1);
+			delete this;
+		}
+	}
+}
+
+var DamageDisplay = function(x,y,value) {
+	this.x = x;
+	this.y = y;
+	this.dist = 0;
+	this.value = value;
+}
+DamageDisplay.prototype = {
+	draw: function() {
+		c.fillStyle = "rgba(255,50,50," + this.dist/1 + ")";
+		c.fillText("-" + this.value,this.x-offset,this.y-this.dist);
+	},
+	update: function() {
+		this.dist+=3;
+		if(this.dist >= tileSize/4){
 			particles.splice(particles.indexOf(this),1);
 			delete this;
 		}
@@ -476,30 +553,27 @@ var updateUI = function() {
 var drawUI = function() {
 	c.fillStyle = "#000";
 	c.fillRect(0,0,tileSize*widthT,tileSize);
-	for(var i=0;i<unitButtons.length;i++){
+	for(var i=0;i<unitButtons.length;i++)
 		unitButtons[i].draw();
-	}
+
 	c.font = "20px Arial";
 	c.fillStyle = "#fff"
-	var middle = Math.round((frameWidth/2)/tileSize) - 1;
-	c.drawImage(coin, tileSize*middle + 10, tileSize/6, tileSize/5,tileSize/5);
-	c.fillText(money, tileSize*middle + tileSize/5 + 10, tileSize/6+20);
+	c.drawImage(coin, tileSize*4 + 10, tileSize/6, tileSize/5,tileSize/5);
+	c.fillText(money, tileSize*4 + tileSize/5 + 10, tileSize/6+20);
+	c.fillText("Level: " + level, tileSize*4 + tileSize/5 + 10, tileSize/6+60);
 
-	//anvil
-	anvilX = tileSize*(middle+1);
-	c.drawImage(anvil[isAnvilClicked], anvilX, 0, tileSize, tileSize);
+	anvil.draw();
 
-	for(var i=0;i<particles.length;i++){
+	for(var i=0;i<particles.length;i++)
 		particles[i].draw();
-	}
 
 	drawBorder();
 }
 
 var scrollMap = function() {
-	if(mouseX <= gameOffsetX + scaledTileSize && offset > 0 && mouseX >= gameOffsetX)
+	if((mouseX <= gameOffsetX + scaledTileSize || keys.left) && offset > 0 && mouseX >= gameOffsetX)
 		offset-=scrollSpeed;
-	else if(mouseX >= width - scaledTileSize - gameOffsetX && offset < (widthT+heightT)*tileSize-frameWidth && mouseX <= width - gameOffsetX)
+	else if((mouseX >= width - scaledTileSize - gameOffsetX || keys.right) && offset < (widthT+heightT)*tileSize-frameWidth && mouseX <= width - gameOffsetX)
 		offset+=scrollSpeed;
 }
 var movePlayers = function() {
@@ -528,6 +602,7 @@ var update = function() {
 				enemyUnits.push(new Knight(widthT*tileSize, tileSize*(spawningEnemy+1), true));
 			movePlayers();
 			moveEnemies();
+			boss.update();
 			updateUI();
 			delta -= interval;
 		}
