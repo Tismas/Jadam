@@ -33,7 +33,7 @@ mouseX		=	0,
 mouseY		=	0,
 
 activeRow	=	1,
-scrollSpeed =	15,
+scrollSpeed =	25,
 now			=	new Date(),
 before		=	new Date(),
 
@@ -194,6 +194,7 @@ var init = function() {
 	frame.width = frameWidth;
 	frame.height = frameHeight;
 	setGameSize();
+	c.font = "20px Bangers";
 
 	game.appendChild(canvas);
 
@@ -435,10 +436,11 @@ window.onkeyup = function(e) {
 var One = function(x,y) {
 	this.x = x;
 	this.y = y;
+	this.origin = y;
 }
 One.prototype = {
 	draw: function() {
-		c.fillStyle = "rgba(255,255,255," + this.y / y + ")";
+		c.fillStyle = "rgba(255,255,255," + this.y / this.origin + ")";
 		c.fillText("+1",this.x,this.y);
 	},
 	update: function() {
@@ -521,7 +523,6 @@ UnitButton.prototype = {
 		c.drawImage(this.unitDesc.weapon[0], this.x + tileSize/5, this.y + tileSize/10, sizeOfImage, sizeOfImage);
 		c.drawImage(this.unitDesc.image[0], this.x + tileSize/5, this.y + tileSize/10, sizeOfImage, sizeOfImage);
 		c.fillStyle = "#fff";
-		c.font = "20px Arial";
 		var price = "$" + this.cost;
 		c.fillText(price, this.x + tileSize - tileSize/2-c.measureText(price).width/2, this.y + tileSize-15);
 		if(this.statusCounter > 0){
@@ -556,7 +557,6 @@ var drawUI = function() {
 	for(var i=0;i<unitButtons.length;i++)
 		unitButtons[i].draw();
 
-	c.font = "20px Arial";
 	c.fillStyle = "#fff"
 	c.drawImage(coin, tileSize*4 + 10, tileSize/6, tileSize/5,tileSize/5);
 	c.fillText(money, tileSize*4 + tileSize/5 + 10, tileSize/6+20);
@@ -571,6 +571,8 @@ var drawUI = function() {
 }
 
 var scrollMap = function() {
+	if(mouseY < gameOffsetY + scaledTileSize)
+		return;
 	if((mouseX <= gameOffsetX + scaledTileSize || keys.left) && offset > 0 && mouseX >= gameOffsetX)
 		offset-=scrollSpeed;
 	else if((mouseX >= width - scaledTileSize - gameOffsetX || keys.right) && offset < (widthT+heightT)*tileSize-frameWidth && mouseX <= width - gameOffsetX)

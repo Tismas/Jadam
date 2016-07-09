@@ -51,6 +51,7 @@ var init = function() {
 	frame.width = frameWidth;
 	frame.height = frameHeight;
 	setGameSize();
+	c.font = "20px Bangers";
 
 	game.appendChild(canvas);
 

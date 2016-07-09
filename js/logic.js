@@ -1,4 +1,6 @@
 var scrollMap = function() {
+	if(mouseY < gameOffsetY + scaledTileSize)
+		return;
 	if((mouseX <= gameOffsetX + scaledTileSize || keys.left) && offset > 0 && mouseX >= gameOffsetX)
 		offset-=scrollSpeed;
 	else if((mouseX >= width - scaledTileSize - gameOffsetX || keys.right) && offset < (widthT+heightT)*tileSize-frameWidth && mouseX <= width - gameOffsetX)

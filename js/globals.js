@@ -32,7 +32,7 @@ mouseX		=	0,
 mouseY		=	0,
 
 activeRow	=	1,
-scrollSpeed =	15,
+scrollSpeed =	25,
 now			=	new Date(),
 before		=	new Date(),
 
